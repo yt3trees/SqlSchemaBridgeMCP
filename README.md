@@ -8,11 +8,12 @@ graph TB
         User["👤 User"]
         ProfileDir["📁 Profile Directory<br/>(e.g., ~/Documents/SqlSchemaBridgeMCP/ProjectA)"]
         CSVs["📄 CSV Files<br/>(tables.csv, columns.csv, relations.csv)"]
+
+        subgraph "Client Application"
+            Agent["🤖 AI Agent / MCP Client<br/>(e.g., Gemini CLI, VSCode)"]
+        end
     end
 
-    subgraph "Client Application"
-        Agent["🤖 AI Agent / MCP Client<br/>(e.g., Gemini CLI, VSCode)"]
-    end
 
     subgraph "SqlSchemaBridgeMCP Server (C#)"
         direction TB
