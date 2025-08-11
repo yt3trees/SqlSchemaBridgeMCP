@@ -77,23 +77,23 @@ sequenceDiagram
     participant DBInfo as 📄 Database Info (.csv)
 
     User->>Agent: "Show me the latest order date for each customer"
-    Agent->>MCPServer: find_table(logical_name="customer")
+    Agent->>MCPServer: find_table<br>(logical_name="customer")
     MCPServer->>DBInfo: Read tables.csv
     DBInfo-->>MCPServer: "customer" -> "Customers"
     MCPServer-->>Agent: {"physical_name": "Customers", ...}
-    Agent->>MCPServer: find_table(logical_name="order")
+    Agent->>MCPServer: find_table<br>(logical_name="order")
     MCPServer->>DBInfo: Read tables.csv
     DBInfo-->>MCPServer: "order" -> "Orders"
     MCPServer-->>Agent: {"physical_name": "Orders", ...}
-    Agent->>MCPServer: find_relations(table_name="Customers")
+    Agent->>MCPServer: find_relations<br>(table_name="Customers")
     MCPServer->>DBInfo: Read relations.csv
-    DBInfo-->>MCPServer: "Customers.CustomerID -> Orders.CustomerID"
-    MCPServer-->>Agent: {"source_table": "Customers", "target_table": "Orders", ...}
-    Agent->>MCPServer: find_column(logical_name="order date")
+    DBInfo-->>MCPServer: "Customers.CustomerID <br>-> Orders.CustomerID"
+    MCPServer-->>Agent: {"source_table": "Customers", <br>"target_table": "Orders", ...}
+    Agent->>MCPServer: find_column<br>(logical_name="order date")
     MCPServer->>DBInfo: Read columns.csv
     DBInfo-->>MCPServer: "order date" -> "OrderDate"
     MCPServer-->>Agent: {"physical_name": "OrderDate", ...}
-    Agent->>User: SELECT T1.CustomerName, MAX(T2.OrderDate) FROM Customers AS T1 JOIN Orders AS T2 ON T1.CustomerID = T2.CustomerID GROUP BY T1.CustomerName;
+    Agent->>User: SELECT <br>T1.CustomerName, MAX(T2.OrderDate)<br>FROM Customers AS T1 <br> JOIN Orders AS T2 <br>ON T1.CustomerID = T2.CustomerID <br>GROUP BY T1.CustomerName;
 ```
 
 1.  The agent calls tools like `find_table` and `find_column` to map logical names ("customer", "order date") to their physical counterparts in the database (`Customers`, `OrderDate`).

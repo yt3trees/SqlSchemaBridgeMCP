@@ -77,23 +77,23 @@ sequenceDiagram
     participant DBInfo as 📄 データベース情報(.csv)
 
     User->>Agent: "顧客ごとの最新注文日を教えて"
-    Agent->>MCPServer: find_table(logical_name="顧客")
+    Agent->>MCPServer: find_table<br>(logical_name="顧客")
     MCPServer->>DBInfo: tables.csvを読み込み
     DBInfo-->>MCPServer: "顧客" -> "Customers"
     MCPServer-->>Agent: {"physical_name": "Customers", ...}
-    Agent->>MCPServer: find_table(logical_name="注文")
+    Agent->>MCPServer: find_table<br>(logical_name="注文")
     MCPServer->>DBInfo: tables.csvを読み込み
     DBInfo-->>MCPServer: "注文" -> "Orders"
     MCPServer-->>Agent: {"physical_name": "Orders", ...}
-    Agent->>MCPServer: find_relations(table_name="Customers")
+    Agent->>MCPServer: find_relations<br>(table_name="Customers")
     MCPServer->>DBInfo: relations.csvを読み込み
-    DBInfo-->>MCPServer: "Customers.CustomerID -> Orders.CustomerID"
-    MCPServer-->>Agent: {"source_table": "Customers", "target_table": "Orders", ...}
-    Agent->>MCPServer: find_column(logical_name="注文日")
+    DBInfo-->>MCPServer: "Customers.CustomerID <br>-> Orders.CustomerID"
+    MCPServer-->>Agent: {"source_table": "Customers", <br>"target_table": "Orders", ...}
+    Agent->>MCPServer: find_column<br>(logical_name="注文日")
     MCPServer->>DBInfo: columns.csvを読み込み
     DBInfo-->>MCPServer: "注文日" -> "OrderDate"
     MCPServer-->>Agent: {"physical_name": "OrderDate", ...}
-    Agent->>User: SELECT T1.CustomerName, MAX(T2.OrderDate) FROM Customers AS T1 JOIN Orders AS T2 ON T1.CustomerID = T2.CustomerID GROUP BY T1.CustomerName;
+    Agent->>User: SELECT <br>T1.CustomerName, MAX(T2.OrderDate)<br>FROM Customers AS T1 <br> JOIN Orders AS T2 <br>ON T1.CustomerID = T2.CustomerID <br>GROUP BY T1.CustomerName;
 ```
 
 1.  エージェントは`find_table`や`find_column`のようなツールを呼び出して、論理名（「顧客」、「注文日」）をデータベース内の物理的な対応物（`Customers`、`OrderDate`）にマッピングします。
