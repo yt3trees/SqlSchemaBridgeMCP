@@ -4,61 +4,24 @@
 
 ```mermaid
 graph TB
-    subgraph "ユーザー環境"
-        User["👤 ユーザー"]
-        ProfileDir["📁 プロファイルディレクトリ<br/>(例: ~/Documents/SqlSchemaBridgeMCP/ProjectA)"]
-        CSVs["📄 CSVファイル<br/>(tables.csv, columns.csv, relations.csv)"]
+    User["👤 ユーザー"]
+    Agent["🤖 AIエージェント / MCPクライアント"]
+    Server["🚀 SqlSchemaBridgeMCPサーバー"]
+    CSVFiles["📄 CSVファイル<br/>(tables.csv, columns.csv, relations.csv)"]
 
-        subgraph "クライアントアプリケーション"
-            Agent["🤖 AIエージェント / MCPクライアント<br/>(例: Gemini CLI, VSCode)"]
-        end
+    subgraph "利用可能なMCPツール"
+        QueryTools["🔍 スキーマクエリ<br/>(find_table, find_column, find_relations)"]
+        EditTools["✏️ スキーマ編集<br/>(add_table, add_column, add_relation)"]
     end
 
-
-    subgraph "SqlSchemaBridgeMCP サーバー (C#)"
-        direction TB
-
-        subgraph "コアコンポーネント"
-            Server["🚀 MCPサーバー (C#)"]
-            ProfileManager["🗂️ プロファイルマネージャー<br/>(DB_PROFILE環境変数を読み取り)"]
-        end
-
-        subgraph "サービス"
-            SchemaProvider["📖 スキーマプロバイダー<br/>(CSVファイルを読み取り)"]
-            SchemaEditor["✍️ スキーマエディター<br/>(CSVファイルに書き込み)"]
-        end
-
-        subgraph "利用可能なツール"
-            direction LR
-            QueryTools["🔍 スキーマクエリ<br/>(find_table, find_column, find_relations, etc.)"]
-            EditTools["✏️ スキーマ編集<br/>(add_table, add_column, add_relation, etc.)"]
-        end
-    end
-
-    %% データフロー
-    User -->|"質問する<br/>'売上トップ10の商品を表示'"| Agent
-    ProfileDir -->|含む| CSVs
-
-    %% クライアント-サーバー通信
-    Agent <-->|"MCPコール"| Server
-
-    %% サーバー内部フロー
-    Server --> ProfileManager
-    ProfileManager -->|"プロファイルを選択"| SchemaProvider
-    ProfileManager -->|"プロファイルを選択"| SchemaEditor
-
-    SchemaProvider -->|"読み取り"| CSVs
-    SchemaEditor -->|"書き込み"| CSVs
-
+    %% メインフロー
+    User -->|"自然言語での質問"| Agent
+    Agent <-->|"MCPプロトコル"| Server
     Server --> QueryTools
     Server --> EditTools
-    QueryTools --> SchemaProvider
-    EditTools --> SchemaEditor
-
-    %% エージェントがクエリを構築
-    Agent -->|"1.find_table('products')<br/>2. find_column('sales')<br/>3. ... など"| QueryTools
-    QueryTools -->|"スキーマ情報を返す"| Agent
-    Agent -->|"スキーマに基づいてSQLクエリを構築"| Agent
+    QueryTools <-->|"読み書き"| CSVFiles
+    EditTools <-->|"読み書き"| CSVFiles
+    Agent -->|"スキーマに基づいてSQL生成"| User
 ```
 
 `SqlSchemaBridgeMCP`は、自然言語とSQLの間のギャップを埋めるために設計されたModel-Context-Protocol (MCP) サーバーです。AIエージェントにデータベーススキーマに関する必要なメタデータ（テーブル定義、列の詳細、リレーションシップなど）を提供し、エージェントがユーザーの質問に基づいてSQLクエリを正確に構築できるようにします。

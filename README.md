@@ -4,61 +4,24 @@
 
 ```mermaid
 graph TB
-    subgraph "User Environment"
-        User["👤 User"]
-        ProfileDir["📁 Profile Directory<br/>(e.g., ~/Documents/SqlSchemaBridgeMCP/ProjectA)"]
-        CSVs["📄 CSV Files<br/>(tables.csv, columns.csv, relations.csv)"]
+    User["👤 User"]
+    Agent["🤖 AI Agent / MCP Client"]
+    Server["🚀 SqlSchemaBridgeMCP Server"]
+    CSVFiles["📄 CSV Files<br/>(tables.csv, columns.csv, relations.csv)"]
 
-        subgraph "Client Application"
-            Agent["🤖 AI Agent / MCP Client<br/>(e.g., Gemini CLI, VSCode)"]
-        end
+    subgraph "Available MCP Tools"
+        QueryTools["🔍 Schema Querying<br/>(find_table, find_column, find_relations)"]
+        EditTools["✏️ Schema Editing<br/>(add_table, add_column, add_relation)"]
     end
 
-
-    subgraph "SqlSchemaBridgeMCP Server (C#)"
-        direction TB
-
-        subgraph "Core Components"
-            Server["🚀 MCP Server (C#)"]
-            ProfileManager["🗂️ Profile Manager<br/>(Reads DB_PROFILE env var)"]
-        end
-
-        subgraph "Services"
-            SchemaProvider["📖 Schema Provider<br/>(Reads CSV files)"]
-            SchemaEditor["✍️ Schema Editor<br/>(Writes to CSV files)"]
-        end
-
-        subgraph "Available Tools"
-            direction LR
-            QueryTools["🔍 Schema Querying<br/>(find_table, find_column, find_relations, etc.)"]
-            EditTools["✏️ Schema Editing<br/>(add_table, add_column, add_relation, etc.)"]
-        end
-    end
-
-    %% Data Flow
-    User -->|"Asks a question<br/>'Show top 10 products by sales'"| Agent
-    ProfileDir -->|Contains| CSVs
-
-    %% Client-Server Communication
-    Agent <-->|"MCP Calls"| Server
-
-    %% Server Internal Flow
-    Server --> ProfileManager
-    ProfileManager -->|"Selects Profile"| SchemaProvider
-    ProfileManager -->|"Selects Profile"| SchemaEditor
-
-    SchemaProvider -->|"Reads from"| CSVs
-    SchemaEditor -->|"Writes to"| CSVs
-
+    %% Main Flow
+    User -->|"Ask question in natural language"| Agent
+    Agent <-->|"MCP Protocol"| Server
     Server --> QueryTools
     Server --> EditTools
-    QueryTools --> SchemaProvider
-    EditTools --> SchemaEditor
-
-    %% Agent builds the query
-    Agent -->|"1.find_table('products')<br/>2. find_column('sales')<br/>3. ... etc."| QueryTools
-    QueryTools -->|"Returns schema info"| Agent
-    Agent -->|"Constructs SQL query based on schema"| Agent
+    QueryTools <-->|"Read/Write"| CSVFiles
+    EditTools <-->|"Read/Write"| CSVFiles
+    Agent -->|"Generate SQL based on schema"| User
 ```
 
 `SqlSchemaBridgeMCP` is a Model-Context-Protocol (MCP) server designed to bridge the gap between natural language and SQL. It provides an AI agent with the necessary metadata about a database schema—such as table definitions, column details, and relationships—enabling the agent to accurately construct SQL queries based on user questions.
