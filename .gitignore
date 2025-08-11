@@ -52,4 +52,4 @@ bld/
 .gemini/
 
 # Don't commit the solution file if it's auto-generated, but track if it's checked in.
-# SqlSchemaBridgeMCP.sln
+*.sln
