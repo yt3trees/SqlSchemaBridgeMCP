@@ -1,0 +1,5 @@
+database_name,schema_name,logical_name,physical_name,primary_key,description
+SalesDB,dbo,Customers,M_CUSTOMERS,CUSTOMER_ID,"Table to store basic customer information."
+SalesDB,dbo,Order Headers,T_ORDER_HEADERS,ORDER_ID,"Stores order information from customers."
+SalesDB,dbo,Products,M_PRODUCTS,PRODUCT_ID,"Master data for product information."
+SalesDB,dbo,Order Details,T_ORDER_DETAILS,ORDER_DETAIL_ID,"Stores order detail information."

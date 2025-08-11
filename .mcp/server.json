@@ -1,0 +1,33 @@
+{
+  "$schema": "https://modelcontextprotocol.io/schemas/draft/2025-07-09/server.json",
+  "description": "SqlSchemaBridgeMCP",
+  "name": "io.github.yt3trees/SqlSchemaBridgeMCP",
+  "packages": [
+    {
+      "registry_name": "nuget",
+      "name": "SqlSchemaBridgeMCP",
+      "version": "0.1.0",
+      "package_arguments": [],
+      "environment_variables": [
+        {
+          "name": "DB_PROFILE",
+          "value": "{db_profile}",
+          "variables": {
+            "db_profile": {
+              "description": "The name of the profile to use, corresponding to a subdirectory in the user's 'Documents/SqlSchemaBridgeMCP' folder.",
+              "is_required": true,
+              "is_secret": false
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "repository": {
+    "url": "https://github.com/yt3trees/SqlSchemaBridgeMCP",
+    "source": "github"
+  },
+  "version_detail": {
+    "version": "0.1.0"
+  }
+}
