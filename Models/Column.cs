@@ -18,4 +18,7 @@ public record Column
 
     [Name("data_type")]
     public required string DataType { get; init; }
+
+    [Name("description")]
+    public string? Description { get; init; }
 }

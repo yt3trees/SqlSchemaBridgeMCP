@@ -51,10 +51,11 @@ internal class SqlSchemaEditorTools
         [Description("The physical name of the table this column belongs to.")] string tablePhysicalName,
         [Description("The logical name of the column.")] string logicalName,
         [Description("The physical name of the column.")] string physicalName,
-        [Description("The data type of the column.")] string dataType)
+        [Description("The data type of the column.")] string dataType,
+        [Description("A description of the column.")] string? description = null)
     {
         _logger.LogInformation("Executing AddColumn tool for {TablePhysicalName}.{PhysicalName}", tablePhysicalName, physicalName);
-        var column = new Column { TablePhysicalName = tablePhysicalName, LogicalName = logicalName, PhysicalName = physicalName, DataType = dataType };
+        var column = new Column { TablePhysicalName = tablePhysicalName, LogicalName = logicalName, PhysicalName = physicalName, DataType = dataType, Description = description };
         _editorService.AddRecord(column, "columns.csv");
         return $"Successfully added column '{physicalName}' to table '{tablePhysicalName}'.";
     }

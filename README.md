@@ -155,21 +155,21 @@ SalesDB,dbo,Order Details,T_ORDER_DETAILS,ORDER_DETAIL_ID,"Stores order detail i
 
 **`columns.csv`**
 ```csv
-table_physical_name,logical_name,physical_name,data_type
-M_CUSTOMERS,CustomerID,CUSTOMER_ID,int
-M_CUSTOMERS,CustomerName,CUSTOMER_NAME,"nvarchar(100)"
-M_CUSTOMERS,Address,ADDRESS,"nvarchar(255)"
-T_ORDER_HEADERS,OrderID,ORDER_ID,int
-T_ORDER_HEADERS,CustomerID,CUSTOMER_ID,int
-T_ORDER_HEADERS,OrderDate,ORDER_DATE,datetime
-T_ORDER_HEADERS,TotalAmount,TOTAL_AMOUNT,decimal
-M_PRODUCTS,ProductID,PRODUCT_ID,int
-M_PRODUCTS,ProductName,PRODUCT_NAME,"nvarchar(100)"
-M_PRODUCTS,UnitPrice,UNIT_PRICE,decimal
-T_ORDER_DETAILS,OrderDetailID,ORDER_DETAIL_ID,int
-T_ORDER_DETAILS,OrderID,ORDER_ID,int
-T_ORDER_DETAILS,ProductID,PRODUCT_ID,int
-T_ORDER_DETAILS,Quantity,QUANTITY,int
+table_physical_name,logical_name,physical_name,data_type,description
+M_CUSTOMERS,CustomerID,CUSTOMER_ID,int,"Primary key for the Customers table."
+M_CUSTOMERS,CustomerName,CUSTOMER_NAME,"nvarchar(100)","Name of the customer."
+M_CUSTOMERS,Address,ADDRESS,"nvarchar(255)",
+T_ORDER_HEADERS,OrderID,ORDER_ID,int,"Primary key for the Order Headers table."
+T_ORDER_HEADERS,CustomerID,CUSTOMER_ID,int,"Foreign key to the Customers table."
+T_ORDER_HEADERS,OrderDate,ORDER_DATE,datetime,
+T_ORDER_HEADERS,TotalAmount,TOTAL_AMOUNT,decimal,
+M_PRODUCTS,ProductID,PRODUCT_ID,int,
+M_PRODUCTS,ProductName,PRODUCT_NAME,"nvarchar(100)",
+M_PRODUCTS,UnitPrice,UNIT_PRICE,decimal,
+T_ORDER_DETAILS,OrderDetailID,ORDER_DETAIL_ID,int,
+T_ORDER_DETAILS,OrderID,ORDER_ID,int,
+T_ORDER_DETAILS,ProductID,PRODUCT_ID,int,
+T_ORDER_DETAILS,Quantity,QUANTITY,int,
 ```
 
 **`relations.csv`**
@@ -335,6 +335,7 @@ These tools allow the agent to modify the schema by editing the underlying CSV f
     -   `logical_name: str`: The logical name of the column.
     -   `physical_name: str`: The physical name of the column.
     -   `data_type: str`: The data type of the column.
+    -   `description: str` (optional): A description of the column.
 -   **Returns**: A confirmation message.
 
 #### `delete_column`
