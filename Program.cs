@@ -14,12 +14,14 @@ builder.Services.AddSingleton<ProfileManager>();
 builder.Services.AddSingleton<SchemaProvider>();
 builder.Services.AddSingleton<SchemaEditorService>();
 builder.Services.AddSingleton<CsvConverterService>();
+builder.Services.AddSingleton<ProfileValidationService>();
 
 // Add the MCP services: the transport to use (stdio) and the tools to register.
 builder.Services
     .AddMcpServer()
     .WithStdioServerTransport()
     .WithTools<SqlSchemaBridgeTools>()
-    .WithTools<SqlSchemaEditorTools>();
+    .WithTools<SqlSchemaEditorTools>()
+    .WithTools<ProfileValidationTools>();
 
 await builder.Build().RunAsync();

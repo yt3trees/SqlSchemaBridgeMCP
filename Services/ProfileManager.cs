@@ -63,4 +63,16 @@ public class ProfileManager
             ProfileReadme = null;
         }
     }
+
+    public string GetProfileDirectory(string profileName)
+    {
+        var documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        return Path.Combine(documentsPath, "SqlSchemaBridgeMCP", profileName);
+    }
+
+    public string GetProfilesRootDirectory()
+    {
+        var documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        return Path.Combine(documentsPath, "SqlSchemaBridgeMCP");
+    }
 }
