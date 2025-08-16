@@ -23,7 +23,7 @@ public class ProfileValidationTools
     {
         try
         {
-            var targetProfile = profileName ?? Environment.GetEnvironmentVariable("DB_PROFILE") ?? "default";
+            var targetProfile = profileName ?? _profileManager.CurrentProfile;
             var result = await _validationService.ValidateProfileAsync(targetProfile);
 
             return new
@@ -94,7 +94,7 @@ public class ProfileValidationTools
             return Task.FromResult<object>(new
             {
                 profiles_directory = profilesDirectory,
-                current_profile = Environment.GetEnvironmentVariable("DB_PROFILE") ?? "not set",
+                current_profile = _profileManager.CurrentProfile,
                 profiles = profiles.ToArray()
             });
         }

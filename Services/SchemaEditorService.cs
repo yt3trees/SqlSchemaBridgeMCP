@@ -11,21 +11,21 @@ namespace SqlSchemaBridgeMCP.Services;
 /// </summary>
 public class SchemaEditorService
 {
-    private readonly string _profilePath;
+    private readonly ProfileManager _profileManager;
     private readonly SchemaProvider _schemaProvider;
     private readonly ILogger<SchemaEditorService> _logger;
     private readonly CsvConfiguration _csvConfig = new(CultureInfo.InvariantCulture);
 
     public SchemaEditorService(ProfileManager profileManager, SchemaProvider schemaProvider, ILogger<SchemaEditorService> logger)
     {
-        _profilePath = profileManager.ProfilePath;
+        _profileManager = profileManager;
         _schemaProvider = schemaProvider;
         _logger = logger;
     }
 
     public void AddRecord<T>(T record, string fileName)
     {
-        var filePath = Path.Combine(_profilePath, fileName);
+        var filePath = Path.Combine(_profileManager.CurrentProfilePath, fileName);
         _logger.LogDebug("Adding record to {FilePath}", filePath);
 
         var records = ReadCsv<T>(filePath).ToList();
@@ -37,7 +37,7 @@ public class SchemaEditorService
 
     public void UpdateRecords<T>(Func<T, bool> predicate, Action<T> updateAction, string fileName)
     {
-        var filePath = Path.Combine(_profilePath, fileName);
+        var filePath = Path.Combine(_profileManager.CurrentProfilePath, fileName);
         _logger.LogDebug("Updating records in {FilePath}", filePath);
 
         var records = ReadCsv<T>(filePath).ToList();
@@ -57,7 +57,7 @@ public class SchemaEditorService
 
     public void DeleteRecords<T>(Func<T, bool> predicate, string fileName)
     {
-        var filePath = Path.Combine(_profilePath, fileName);
+        var filePath = Path.Combine(_profileManager.CurrentProfilePath, fileName);
         _logger.LogDebug("Deleting records from {FilePath}", filePath);
 
         var records = ReadCsv<T>(filePath).ToList();

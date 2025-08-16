@@ -7,11 +7,11 @@ namespace SqlSchemaBridgeMCP.Services;
 
 /// <summary>
 /// Loads and provides access to the database schema from CSV files.
-/// The data is loaded once and cached in memory, with support for reloading.
+/// The data is loaded dynamically based on the current profile.
 /// </summary>
 public class SchemaProvider
 {
-    private readonly string _profilePath;
+    private readonly ProfileManager _profileManager;
     private readonly ILogger<SchemaProvider> _logger;
 
     public IReadOnlyList<Table> Tables { get; private set; } = [];
@@ -20,8 +20,8 @@ public class SchemaProvider
 
     public SchemaProvider(ProfileManager profileManager, ILogger<SchemaProvider> logger)
     {
+        _profileManager = profileManager;
         _logger = logger;
-        _profilePath = profileManager.ProfilePath;
         LoadData();
     }
 
@@ -36,11 +36,12 @@ public class SchemaProvider
 
     private void LoadData()
     {
-        Tables = LoadCsv<Table>(Path.Combine(_profilePath, "tables.csv"));
-        Columns = LoadCsv<Column>(Path.Combine(_profilePath, "columns.csv"));
-        Relations = LoadCsv<Relation>(Path.Combine(_profilePath, "relations.csv"));
+        var profilePath = _profileManager.CurrentProfilePath;
+        Tables = LoadCsv<Table>(Path.Combine(profilePath, "tables.csv"));
+        Columns = LoadCsv<Column>(Path.Combine(profilePath, "columns.csv"));
+        Relations = LoadCsv<Relation>(Path.Combine(profilePath, "relations.csv"));
 
-        _logger.LogInformation("Loaded {TableCount} tables, {ColumnCount} columns, and {RelationCount} relations.", Tables.Count, Columns.Count, Relations.Count);
+        _logger.LogInformation("Loaded {TableCount} tables, {ColumnCount} columns, and {RelationCount} relations from profile: {ProfileName}", Tables.Count, Columns.Count, Relations.Count, _profileManager.CurrentProfile);
     }
 
     private IReadOnlyList<T> LoadCsv<T>(string filePath)

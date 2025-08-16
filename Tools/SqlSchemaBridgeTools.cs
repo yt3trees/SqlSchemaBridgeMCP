@@ -29,10 +29,10 @@ internal class SqlSchemaBridgeTools
     [Description("Gets the instructions for the AI, if a README.md file is present in the current profile's directory. This tool must be executed first when using this MCP server.")]
     public string GetProfileInstructions()
     {
-        if (!string.IsNullOrWhiteSpace(_profileManager.ProfileReadme))
+        if (!string.IsNullOrWhiteSpace(_profileManager.CurrentProfileReadme))
         {
             _logger.LogInformation("Returning profile instructions from README.md.");
-            return _profileManager.ProfileReadme;
+            return _profileManager.CurrentProfileReadme;
         }
 
         _logger.LogInformation("No profile instructions (README.md) found for the current profile.");

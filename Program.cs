@@ -22,6 +22,7 @@ builder.Services
     .WithStdioServerTransport()
     .WithTools<SqlSchemaBridgeTools>()
     .WithTools<SqlSchemaEditorTools>()
-    .WithTools<ProfileValidationTools>();
+    .WithTools<ProfileValidationTools>()
+    .WithTools<ProfileManagementTools>();
 
 await builder.Build().RunAsync();

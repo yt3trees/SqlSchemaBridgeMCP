@@ -3,64 +3,128 @@ using Microsoft.Extensions.Logging;
 namespace SqlSchemaBridgeMCP.Services;
 
 /// <summary>
-/// Manages the loading of database schema profiles.
+/// Manages the loading of database schema profiles with dynamic switching capability.
 /// </summary>
 public class ProfileManager
 {
     private readonly ILogger<ProfileManager> _logger;
-    public string ProfilePath { get; }
-    public string? ProfileReadme { get; }
+    private readonly string _settingsFile;
+    private string _currentProfile;
+    private string? _currentProfileReadme;
+
+    public string CurrentProfile => _currentProfile;
+    public string CurrentProfilePath => GetProfileDirectory(_currentProfile);
+    public string? CurrentProfileReadme => _currentProfileReadme;
 
     public ProfileManager(ILogger<ProfileManager> logger)
     {
         _logger = logger;
-        var profileName = Environment.GetEnvironmentVariable("DB_PROFILE");
-        if (string.IsNullOrWhiteSpace(profileName))
-        {
-            Console.WriteLine("Error: The DB_PROFILE environment variable is not set.");
-            Console.WriteLine("This variable is required to select the database schema profile.");
-            Console.WriteLine();
-            Console.WriteLine("You can set it in your shell:");
-            Console.WriteLine("  Example (Windows): set DB_PROFILE=ProjectA_DB");
-            Console.WriteLine("  Example (Linux/macOS): export DB_PROFILE=ProjectA_DB");
-            Console.WriteLine();
-            Console.WriteLine("Alternatively, you can configure it in your MCP client's settings file (e.g., .gemini/settings.json):");
-            Console.WriteLine(@"{
-  ""mcpServers"": {
-    ""SqlSchemaBridgeMCP"": {
-      ...
-      ""env"": {
-        ""DB_PROFILE"": ""YourProfileName""
-      }
-    }
-  }
-}");
-            Console.WriteLine();
-            // Exit the application gracefully.
-            Environment.Exit(0);
-        }
 
         var documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-        ProfilePath = Path.Combine(documentsPath, "SqlSchemaBridgeMCP", profileName);
+        var rootDirectory = Path.Combine(documentsPath, "SqlSchemaBridgeMCP");
+        _settingsFile = Path.Combine(rootDirectory, ".current_profile");
 
-        _logger.LogInformation("Using profile path: {ProfilePath}", ProfilePath);
+        // Load current profile with priority order:
+        // 1. Saved profile from settings file
+        // 2. Default profile
+        _currentProfile = LoadCurrentProfile();
 
-        if (!Directory.Exists(ProfilePath))
+        _logger.LogInformation("Using profile: {CurrentProfile}", _currentProfile);
+
+        // Validate current profile exists
+        if (!Directory.Exists(CurrentProfilePath))
         {
-            _logger.LogError("Profile directory not found at: {ProfilePath}", ProfilePath);
-            throw new DirectoryNotFoundException($"The profile directory '{ProfilePath}' was not found. Please ensure it exists and contains the required CSV files.");
+            _logger.LogWarning("Current profile directory not found at: {ProfilePath}. Available profiles can be listed using list_available_profiles tool.", CurrentProfilePath);
         }
 
-        var readmePath = Path.Combine(ProfilePath, "README.md");
+        LoadProfileReadme();
+    }
+
+    private string LoadCurrentProfile()
+    {
+        // Priority 1: Saved profile from settings file
+        if (File.Exists(_settingsFile))
+        {
+            try
+            {
+                var savedProfile = File.ReadAllText(_settingsFile).Trim();
+                if (!string.IsNullOrEmpty(savedProfile))
+                {
+                    _logger.LogInformation("Loaded saved profile from settings: {SavedProfile}", savedProfile);
+                    return savedProfile;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning("Failed to read saved profile settings: {Error}", ex.Message);
+            }
+        }
+
+        // Priority 2: Default
+        _logger.LogInformation("No profile specified, using default profile");
+        return "default";
+    }
+
+    public async Task<bool> SwitchProfileAsync(string profileName)
+    {
+        if (string.IsNullOrWhiteSpace(profileName))
+        {
+            _logger.LogError("Profile name cannot be empty");
+            return false;
+        }
+
+        var profilePath = GetProfileDirectory(profileName);
+        if (!Directory.Exists(profilePath))
+        {
+            _logger.LogError("Profile directory not found: {ProfilePath}", profilePath);
+            return false;
+        }
+
+        try
+        {
+            // Ensure the settings directory exists
+            var settingsDir = Path.GetDirectoryName(_settingsFile);
+            if (!string.IsNullOrEmpty(settingsDir) && !Directory.Exists(settingsDir))
+            {
+                Directory.CreateDirectory(settingsDir);
+            }
+
+            // Save the new profile to settings file
+            await File.WriteAllTextAsync(_settingsFile, profileName);
+
+            _currentProfile = profileName;
+            LoadProfileReadme();
+
+            _logger.LogInformation("Successfully switched to profile: {ProfileName}", profileName);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError("Failed to switch profile to {ProfileName}: {Error}", profileName, ex.Message);
+            return false;
+        }
+    }
+
+    private void LoadProfileReadme()
+    {
+        var readmePath = Path.Combine(CurrentProfilePath, "README.md");
         if (File.Exists(readmePath))
         {
-            _logger.LogInformation("Loading profile README.md from: {ReadmePath}", readmePath);
-            ProfileReadme = File.ReadAllText(readmePath);
+            try
+            {
+                _currentProfileReadme = File.ReadAllText(readmePath);
+                _logger.LogInformation("Loaded README.md for profile: {CurrentProfile}", _currentProfile);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning("Failed to load README.md for profile {CurrentProfile}: {Error}", _currentProfile, ex.Message);
+                _currentProfileReadme = null;
+            }
         }
         else
         {
-            _logger.LogInformation("No README.md found in profile directory. Skipping.");
-            ProfileReadme = null;
+            _currentProfileReadme = null;
+            _logger.LogInformation("No README.md found for profile: {CurrentProfile}", _currentProfile);
         }
     }
 

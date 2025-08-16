@@ -143,9 +143,9 @@ T_ORDER_HEADERS,ORDER_ID,T_ORDER_DETAILS,ORDER_ID
 M_PRODUCTS,PRODUCT_ID,T_ORDER_DETAILS,PRODUCT_ID
 ```
 
-### 3. Gemini CLIの設定
+### 3. MCPクライアントの設定
 
-Gemini CLIからこのMCPサーバーを利用するには、`gemini`コマンドラインツールがサーバーを起動できるように設定が必要です。
+MCPクライアント（Gemini CLI等）からこのMCPサーバーを利用するには、クライアントがサーバーを起動できるように設定が必要です。
 
 `gemini`の設定ファイル（通常はユーザーのホームディレクトリの `.gemini/settings.json` にあります）に、以下の`mcpServers`設定を追加または更新します。
 
@@ -155,10 +155,7 @@ Gemini CLIからこのMCPサーバーを利用するには、`gemini`コマン�
     "SqlSchemaBridgeMCP": {
       "type": "stdio",
       "command": "C:\\path\\to\\your\\extracted\\folder\\SqlSchemaBridgeMCP.exe",
-      "args": [],
-      "env": {
-        "DB_PROFILE": "ProjectA"
-      }
+      "args": []
     }
   }
 }
@@ -167,9 +164,26 @@ Gemini CLIからこのMCPサーバーを利用するには、`gemini`コマン�
 **設定のポイント:**
 
 -   `command`: `SqlSchemaBridgeMCP.exe`の絶対パスに置き換えてください。これは、[インストール](#1-インストール)のステップでzipファイルを展開した場所です。
--   `env.DB_PROFILE`: 使用したいプロファイル名（例: `ProjectA`）に設定します。このプロファイルは、[メタデータファイルの作成](#メタデータファイルの作成)で設定したディレクトリ名と一致する必要があります。
+-   **プロファイル設定不要**: サーバーは初回起動時に`default`プロファイルを使用し、`switch_profile`ツールで動的に切り替えできます。
 
 macOSやLinuxの場合は、`command`を `./SqlSchemaBridgeMCP` のような実行可能ファイルへのパスに設定します。
+
+### 4. プロファイルの管理
+
+#### 初回起動
+- サーバーは自動的に`default`プロファイルを使用します
+- プロファイルが存在しない場合でも、利用可能なプロファイルを`list_available_profiles`ツールで確認できます
+
+#### プロファイルの切り替え
+AIまたはユーザーは以下のツールを使用してプロファイルを管理できます：
+
+- **`switch_profile(profile_name)`**: 指定されたプロファイルに切り替え
+- **`get_current_profile()`**: 現在使用中のプロファイル情報を取得
+- **`list_available_profiles()`**: 利用可能なプロファイル一覧を表示
+
+#### 永続化
+- プロファイル切り替えは設定ファイル（`.current_profile`）に保存されます
+- 次回起動時も同じプロファイルが自動的に使用されます
 
 ---
 
@@ -179,8 +193,6 @@ macOSやLinuxの場合は、`command`を `./SqlSchemaBridgeMCP` のような実�
 ### ローカルでの開発セットアップ
 
 ソースコードからこのMCPサーバーをテストするには、IDEを設定して`dotnet run`で直接プロジェクトを実行することができます。これは開発目的で推奨されます。
-
-起動設定で`DB_PROFILE`環境変数を設定し、目的のテストプロファイルを指すようにします。
 
 ```json
 {
@@ -192,14 +204,15 @@ macOSやLinuxの場合は、`command`を `./SqlSchemaBridgeMCP` のような実�
         "run",
         "--project",
         "C:\\work\\SqlSchemaBridgeMCP"
-      ],
-      "env": {
-        "DB_PROFILE": "ProjectA"
-      }
+      ]
     }
   }
 }
 ```
+
+**開発時のプロファイル管理:**
+- 開発時もプロファイル切り替えは`switch_profile`ツールを使用
+- 設定ファイルによる永続化により、開発セッション間でプロファイルが保持されます
 
 ### リリースビルドの作成（自己完結型）
 
@@ -317,3 +330,43 @@ dotnet publish -c Release -r osx-x64 --self-contained true
     -   `target_table: str`: ターゲットテーブルの物理名。
     -   `target_column: str`: ターゲット列の物理名。
 -   **戻り値**: 確認メッセージ。
+
+### プロファイル管理ツール
+
+これらのツールにより、AIまたはユーザーはプロファイルを動的に切り替えて管理できます。
+
+#### `switch_profile`
+-   **説明**: 指定されたプロファイルに切り替えて、スキーマデータを再読み込みします。
+-   **引数**:
+    -   `profile_name: str`: 切り替え先のプロファイル名。
+-   **戻り値**: 切り替え結果とスキーマ読み込み状況。
+
+#### `get_current_profile`
+-   **説明**: 現在使用中のプロファイル情報を取得します。
+-   **引数**: なし。
+-   **戻り値**: 現在のプロファイル名、パス、スキーマ読み込み状況。
+
+#### `reload_schema`
+-   **説明**: 現在のプロファイルからスキーマデータを再読み込みします。
+-   **引数**: なし。
+-   **戻り値**: 再読み込み結果と前後のデータ件数。
+
+### プロファイル検証ツール
+
+これらのツールにより、プロファイルのCSVファイル設定を検証できます。
+
+#### `validate_profile`
+-   **説明**: 指定されたプロファイルのCSVファイル設定を検証します。
+-   **引数**:
+    -   `profile_name: str` (任意): 検証するプロファイル名。省略時は現在のプロファイルを検証。
+-   **戻り値**: 検証結果と詳細レポート。
+
+#### `list_available_profiles`
+-   **説明**: 利用可能なプロファイル一覧を取得します。
+-   **引数**: なし。
+-   **戻り値**: プロファイル一覧と各プロファイルのファイル存在状況。
+
+#### `validate_all_profiles`
+-   **説明**: 利用可能なすべてのプロファイルを検証します。
+-   **引数**: なし。
+-   **戻り値**: 全プロファイルの検証結果サマリー。

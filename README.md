@@ -143,17 +143,11 @@ T_ORDER_HEADERS,ORDER_ID,T_ORDER_DETAILS,ORDER_ID
 M_PRODUCTS,PRODUCT_ID,T_ORDER_DETAILS,PRODUCT_ID
 ```
 
-#### Set the Profile
+### 3. MCP Client Configuration
 
-The MCP server uses the `DB_PROFILE` environment variable to determine which profile to load at startup. Set this variable to the name of the profile directory you want to use (e.g., `ProjectA`).
+To use this MCP server with MCP clients (e.g., Gemini CLI), you need to configure the client to launch the server.
 
-If `DB_PROFILE` is not set, the server will fail to start.
-
-### 3. Gemini CLI Configuration
-
-To use this MCP server with the Gemini CLI, you need to configure the `gemini` command-line tool to launch the server.
-
-Add or update the `mcpServers` configuration in your `gemini` settings file (usually located at `~/.gemini/settings.json` on Linux/macOS or `%USERPROFILE%\.gemini\settings.json` on Windows) with the following:
+Add or update the `mcpServers` configuration in your client's settings file (for Gemini CLI, usually located at `~/.gemini/settings.json` on Linux/macOS or `%USERPROFILE%\.gemini\settings.json` on Windows) with the following:
 
 ```json
 {
@@ -161,10 +155,7 @@ Add or update the `mcpServers` configuration in your `gemini` settings file (usu
     "SqlSchemaBridgeMCP": {
       "type": "stdio",
       "command": "C:\\path\\to\\your\\extracted\\folder\\SqlSchemaBridgeMCP.exe",
-      "args": [],
-      "env": {
-        "DB_PROFILE": "ProjectA"
-      }
+      "args": []
     }
   }
 }
@@ -173,9 +164,26 @@ Add or update the `mcpServers` configuration in your `gemini` settings file (usu
 **Key Configuration Points:**
 
 -   `command`: Replace this with the absolute path to your `SqlSchemaBridgeMCP.exe`. This is the location where you extracted the zip file in the [Installation](#1-installation) step.
--   `env.DB_PROFILE`: Set this to the name of the profile you want to use (e.g., `ProjectA`). This must match the directory name you set up in the [Create Metadata Files](#create-metadata-files) step.
+-   **No Profile Configuration Required**: The server automatically uses the `default` profile on first startup and allows dynamic switching using the `switch_profile` tool.
 
 For macOS or Linux, the `command` should be the path to the executable, like `./SqlSchemaBridgeMCP`.
+
+### 4. Profile Management
+
+#### Initial Startup
+- The server automatically uses the `default` profile on first startup
+- If the profile doesn't exist, you can still list available profiles using the `list_available_profiles` tool
+
+#### Profile Switching
+AI or users can manage profiles using the following tools:
+
+- **`switch_profile(profile_name)`**: Switch to the specified profile
+- **`get_current_profile()`**: Get information about the currently active profile
+- **`list_available_profiles()`**: List all available profiles
+
+#### Persistence
+- Profile switches are saved to a settings file (`.current_profile`)
+- The same profile will automatically be used on the next startup
 
 ---
 
@@ -185,8 +193,6 @@ For macOS or Linux, the `command` should be the path to the executable, like `./
 ### Local Development Setup
 
 To test this MCP server from the source code, you can configure your IDE to run the project directly using `dotnet run`. This is recommended for development purposes.
-
-Set the `DB_PROFILE` environment variable in your launch configuration to point to your desired test profile.
 
 ```json
 {
@@ -198,14 +204,15 @@ Set the `DB_PROFILE` environment variable in your launch configuration to point 
         "run",
         "--project",
         "C:\\work\\SqlSchemaBridgeMCP"
-      ],
-      "env": {
-        "DB_PROFILE": "ProjectA"
-      }
+      ]
     }
   }
 }
 ```
+
+**Development Profile Management:**
+- Use the `switch_profile` tool to switch profiles during development
+- Settings file persistence ensures profiles are maintained across development sessions
 
 ### Creating a Release Build (Self-Contained)
 
@@ -325,3 +332,43 @@ These tools allow the agent to modify the schema by editing the underlying CSV f
     -   `target_table: str`: The target table's physical name.
     -   `target_column: str`: The target column's physical name.
 -   **Returns**: A confirmation message.
+
+### Profile Management Tools
+
+These tools allow AI or users to dynamically switch and manage profiles.
+
+#### `switch_profile`
+-   **Description**: Switches to the specified profile and reloads schema data.
+-   **Arguments**:
+    -   `profile_name: str`: The name of the profile to switch to.
+-   **Returns**: Switch result and schema loading status.
+
+#### `get_current_profile`
+-   **Description**: Gets information about the currently active profile.
+-   **Arguments**: None.
+-   **Returns**: Current profile name, path, and schema loading status.
+
+#### `reload_schema`
+-   **Description**: Reloads schema data from the current profile.
+-   **Arguments**: None.
+-   **Returns**: Reload result and before/after data counts.
+
+### Profile Validation Tools
+
+These tools allow validation of profile CSV file settings.
+
+#### `validate_profile`
+-   **Description**: Validates CSV file settings for the specified profile.
+-   **Arguments**:
+    -   `profile_name: str` (optional): Profile name to validate. If omitted, validates the current profile.
+-   **Returns**: Validation results and detailed report.
+
+#### `list_available_profiles`
+-   **Description**: Gets a list of available profiles.
+-   **Arguments**: None.
+-   **Returns**: Profile list and file existence status for each profile.
+
+#### `validate_all_profiles`
+-   **Description**: Validates all available profiles.
+-   **Arguments**: None.
+-   **Returns**: Summary of validation results for all profiles.
