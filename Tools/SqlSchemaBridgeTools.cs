@@ -14,12 +14,14 @@ internal class SqlSchemaBridgeTools
 {
     private readonly ProfileManager _profileManager;
     private readonly SchemaProvider _schemaProvider;
+    private readonly CsvConverterService _csvConverter;
     private readonly ILogger<SqlSchemaBridgeTools> _logger;
 
-    public SqlSchemaBridgeTools(ProfileManager profileManager, SchemaProvider schemaProvider, ILogger<SqlSchemaBridgeTools> logger)
+    public SqlSchemaBridgeTools(ProfileManager profileManager, SchemaProvider schemaProvider, CsvConverterService csvConverter, ILogger<SqlSchemaBridgeTools> logger)
     {
         _profileManager = profileManager;
         _schemaProvider = schemaProvider;
+        _csvConverter = csvConverter;
         _logger = logger;
     }
 
@@ -38,8 +40,8 @@ internal class SqlSchemaBridgeTools
     }
 
     [McpServerTool]
-    [Description("Searches for tables by logical or physical name and returns all matches.")]
-    public IEnumerable<Table> FindTable(
+    [Description("Searches for tables by logical or physical name and returns all matches in CSV format.")]
+    public string FindTable(
         [Description("The logical name of the table (e.g., 'Customers')")] string? logicalName = null,
         [Description("The physical name of the table (e.g., 'M_CUSTOMERS')")] string? physicalName = null,
         [Description("The physical name of the database to search within.")] string? databaseName = null,
@@ -88,14 +90,15 @@ internal class SqlSchemaBridgeTools
         if (!results.Any())
         {
             _logger.LogInformation("Table not found for the given criteria.");
+            return "database_name,schema_name,logical_name,physical_name,primary_key,description";
         }
 
-        return results;
+        return _csvConverter.ConvertTablesToCsv(results);
     }
 
     [McpServerTool]
-    [Description("Searches for columns by logical or physical name. The search can be filtered by providing a table_name. If only a table_name is provided, all columns for that table are returned.")]
-    public IEnumerable<Column> FindColumn(
+    [Description("Searches for columns by logical or physical name and returns results in CSV format. The search can be filtered by providing a table_name. If only a table_name is provided, all columns for that table are returned.")]
+    public string FindColumn(
         [Description("The logical name of the column (e.g., 'Customer Name')")] string? logicalName = null,
         [Description("The physical name of the column (e.g., 'CUSTOMER_NAME')")] string? physicalName = null,
         [Description("The physical name of the table to search within (e.g., 'M_CUSTOMERS')")] string? tableName = null,
@@ -136,14 +139,15 @@ internal class SqlSchemaBridgeTools
         if (!results.Any())
         {
             _logger.LogInformation("Column not found for the given criteria.");
+            return "table_physical_name,logical_name,physical_name,data_type,description";
         }
 
-        return results;
+        return _csvConverter.ConvertColumnsToCsv(results);
     }
 
     [McpServerTool]
-    [Description("Finds relationships and join conditions for a specified table.")]
-    public IEnumerable<Relation> FindRelations(
+    [Description("Finds relationships and join conditions for a specified table and returns results in CSV format.")]
+    public string FindRelations(
         [Description("The physical name of the table (e.g., 'M_CUSTOMERS')")] string tableName,
         [Description("Specifies whether to perform an exact match (case-insensitive). Defaults to false (contains).")] bool exactMatch = false)
     {
@@ -165,16 +169,17 @@ internal class SqlSchemaBridgeTools
         if (!results.Any())
         {
             _logger.LogInformation("No relations found for table: '{TableName}'", tableName);
+            return "source_table,source_column,target_table,target_column";
         }
 
-        return results;
+        return _csvConverter.ConvertRelationsToCsv(results);
     }
 
     [McpServerTool]
-    [Description("Lists all available tables.")]
-    public IEnumerable<Table> ListTables()
+    [Description("Lists all available tables in CSV format.")]
+    public string ListTables()
     {
         _logger.LogInformation("Returning all tables.");
-        return _schemaProvider.Tables;
+        return _csvConverter.ConvertTablesToCsv(_schemaProvider.Tables);
     }
 }

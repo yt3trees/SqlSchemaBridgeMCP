@@ -13,6 +13,7 @@ builder.Logging.AddConsole(o => o.LogToStandardErrorThreshold = LogLevel.Trace);
 builder.Services.AddSingleton<ProfileManager>();
 builder.Services.AddSingleton<SchemaProvider>();
 builder.Services.AddSingleton<SchemaEditorService>();
+builder.Services.AddSingleton<CsvConverterService>();
 
 // Add the MCP services: the transport to use (stdio) and the tools to register.
 builder.Services
