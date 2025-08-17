@@ -19,8 +19,8 @@ graph TB
     Agent <-->|"MCP Protocol"| Server
     Server --> QueryTools
     Server --> EditTools
-    QueryTools <-->|"Read/Write"| CSVFiles
-    EditTools <-->|"Read/Write"| CSVFiles
+    QueryTools <-->|"Read"| CSVFiles
+    EditTools <-->|"Write"| CSVFiles
     Agent -->|"Generate SQL based on schema"| User
 ```
 
@@ -235,47 +235,47 @@ The output will be placed in the `bin/Release/net8.0/<RID>/publish/` directory.
 
 ## Available Tools
 
-The server exposes a comprehensive set of tools for the AI agent, divided into two main categories: schema querying and schema editing.
+The server exposes a comprehensive set of 18 tools for the AI agent, divided into four main categories: schema querying, schema editing, profile management, and profile validation.
 
 ### Schema Querying Tools
 
-These tools allow the agent to inspect the database schema.
-
-#### `list_tables`
--   **Description**: Lists all available tables defined in `tables.csv`.
--   **Arguments**: None.
--   **Returns**: A list of all table definitions.
-
-#### `find_table`
--   **Description**: Searches for tables by logical or physical name and returns all matches.
--   **Arguments**:
-    -   `logical_name: str` (optional): The logical name of the table (e.g., "Customers").
-    -   `physical_name: str` (optional): The physical name of the table (e.g., "M_CUSTOMERS").
-    -   `database_name: str` (optional): The physical name of the database to search within.
-    -   `schema_name: str` (optional): The physical name of the schema to search within.
-    -   `exact_match: bool` (optional): If true, performs a case-insensitive exact match. Defaults to `false` (contains).
--   **Returns**: A list of matching table definitions.
-
-#### `find_column`
--   **Description**: Searches for columns by logical or physical name. The search can be filtered by table name. If only a table name is provided, all columns for that table are returned.
--   **Arguments**:
-    -   `logical_name: str` (optional): The logical name of the column (e.g., "Customer Name").
-    -   `physical_name: str` (optional): The physical name of the column (e.g., "CUSTOMER_NAME").
-    -   `table_name: str` (optional): The physical name of the table to search within.
-    -   `exact_match: bool` (optional): If true, performs a case-insensitive exact match. Defaults to `false` (contains).
--   **Returns**: A list of matching column definitions.
-
-#### `find_relations`
--   **Description**: Finds relationships and join conditions for a specified table.
--   **Arguments**:
-    -   `table_name: str`: The physical name of the table (e.g., "M_CUSTOMERS").
-    -   `exact_match: bool` (optional): If true, performs a case-insensitive exact match. Defaults to `false` (contains).
--   **Returns**: A list of relations, each specifying the source and target tables and columns.
+These tools allow the agent to inspect the database schema and return results in CSV format.
 
 #### `get_profile_instructions`
--   **Description**: Gets the instructions for the AI, if a `README.md` file is present in the current profile's directory. This can be used to provide specific guidance on how to interpret the schema for a particular database.
+-   **Description**: Gets the instructions for the AI, if a `README.md` file is present in the current profile's directory. **This tool must be executed first when using this MCP server.**
 -   **Arguments**: None.
--   **Returns**: A string containing the profile-specific instructions, or a default message if no instructions are found.
+-   **Returns**: String containing profile-specific instructions, or a default message if no instructions are found.
+
+#### `list_tables`
+-   **Description**: Lists all available tables in CSV format.
+-   **Arguments**: None.
+-   **Returns**: CSV format of all tables.
+
+#### `find_table`
+-   **Description**: Searches for tables by logical or physical name and returns all matches in CSV format.
+-   **Arguments**:
+    -   `logicalName: str` (optional): The logical name of the table (e.g., "Customers").
+    -   `physicalName: str` (optional): The physical name of the table (e.g., "M_CUSTOMERS").
+    -   `databaseName: str` (optional): The physical name of the database to search within.
+    -   `schemaName: str` (optional): The physical name of the schema to search within.
+    -   `exactMatch: bool` (optional): If true, performs a case-insensitive exact match. Defaults to `false` (contains).
+-   **Returns**: CSV format table data.
+
+#### `find_column`
+-   **Description**: Searches for columns by logical or physical name and returns results in CSV format. The search can be filtered by providing a table_name. If only a table_name is provided, all columns for that table are returned. **Note**: If the result is too large and causes token limit issues, try using exactMatch=true to get more specific results.
+-   **Arguments**:
+    -   `logicalName: str` (optional): The logical name of the column (e.g., "Customer Name").
+    -   `physicalName: str` (optional): The physical name of the column (e.g., "CUSTOMER_NAME").
+    -   `tableName: str` (optional): The physical name of the table to search within (e.g., "M_CUSTOMERS").
+    -   `exactMatch: bool` (optional): If true, performs a case-insensitive exact match. Defaults to `false` (contains).
+-   **Returns**: CSV format column data (max 1000 results).
+
+#### `find_relations`
+-   **Description**: Finds relationships and join conditions for a specified table and returns results in CSV format.
+-   **Arguments**:
+    -   `tableName: str`: The physical name of the table (e.g., "M_CUSTOMERS").
+    -   `exactMatch: bool` (optional): If true, performs a case-insensitive exact match. Defaults to `false` (contains).
+-   **Returns**: CSV format relation data.
 
 ### Schema Editing Tools
 
@@ -284,91 +284,106 @@ These tools allow the agent to modify the schema by editing the underlying CSV f
 #### `add_table`
 -   **Description**: Adds a new table definition to `tables.csv`.
 -   **Arguments**:
-    -   `logical_name: str`: The logical name of the table.
-    -   `physical_name: str`: The physical name of the table.
-    -   `primary_key: str`: The primary key of the table.
+    -   `logicalName: str`: The logical name of the table (e.g., "Customers").
+    -   `physicalName: str`: The physical name of the table (e.g., "M_CUSTOMERS").
+    -   `primaryKey: str`: The primary key of the table (e.g., "CUSTOMER_ID").
     -   `description: str`: A description of the table.
-    -   `database_name: str` (optional): The physical name of the database.
-    -   `schema_name: str` (optional): The physical name of the schema.
--   **Returns**: A confirmation message.
+    -   `databaseName: str` (optional): The physical name of the database.
+    -   `schemaName: str` (optional): The physical name of the schema.
+-   **Returns**: Success message.
 
 #### `delete_table`
 -   **Description**: Deletes a table definition from `tables.csv`.
 -   **Arguments**:
-    -   `physical_name: str`: The physical name of the table to delete.
--   **Returns**: A confirmation message.
+    -   `physicalName: str`: The physical name of the table to delete.
+-   **Returns**: Success message.
 
 #### `add_column`
 -   **Description**: Adds a new column definition to `columns.csv`.
 -   **Arguments**:
-    -   `table_physical_name: str`: The physical name of the table this column belongs to.
-    -   `logical_name: str`: The logical name of the column.
-    -   `physical_name: str`: The physical name of the column.
-    -   `data_type: str`: The data type of the column.
+    -   `tablePhysicalName: str`: The physical name of the table this column belongs to.
+    -   `logicalName: str`: The logical name of the column.
+    -   `physicalName: str`: The physical name of the column.
+    -   `dataType: str`: The data type of the column.
     -   `description: str` (optional): A description of the column.
--   **Returns**: A confirmation message.
+-   **Returns**: Success message.
 
 #### `delete_column`
 -   **Description**: Deletes a column definition from `columns.csv`.
 -   **Arguments**:
-    -   `table_physical_name: str`: The physical name of the table the column belongs to.
-    -   `physical_name: str`: The physical name of the column to delete.
--   **Returns**: A confirmation message.
+    -   `tablePhysicalName: str`: The physical name of the table the column belongs to.
+    -   `physicalName: str`: The physical name of the column to delete.
+-   **Returns**: Success message.
 
 #### `add_relation`
 -   **Description**: Adds a new relationship definition to `relations.csv`.
 -   **Arguments**:
-    -   `source_table: str`: The source table's physical name.
-    -   `source_column: str`: The source column's physical name.
-    -   `target_table: str`: The target table's physical name.
-    -   `target_column: str`: The target column's physical name.
--   **Returns**: A confirmation message.
+    -   `sourceTable: str`: The source table's physical name.
+    -   `sourceColumn: str`: The source column's physical name.
+    -   `targetTable: str`: The target table's physical name.
+    -   `targetColumn: str`: The target column's physical name.
+-   **Returns**: Success message.
 
 #### `delete_relation`
 -   **Description**: Deletes a relationship definition from `relations.csv`.
 -   **Arguments**:
-    -   `source_table: str`: The source table's physical name.
-    -   `source_column: str`: The source column's physical name.
-    -   `target_table: str`: The target table's physical name.
-    -   `target_column: str`: The target column's physical name.
--   **Returns**: A confirmation message.
+    -   `sourceTable: str`: The source table's physical name.
+    -   `sourceColumn: str`: The source column's physical name.
+    -   `targetTable: str`: The target table's physical name.
+    -   `targetColumn: str`: The target column's physical name.
+-   **Returns**: Success message.
 
 ### Profile Management Tools
 
 These tools allow AI or users to dynamically switch and manage profiles.
 
 #### `switch_profile`
--   **Description**: Switches to the specified profile and reloads schema data.
+-   **Description**: Switches to a different profile and reloads schema data.
 -   **Arguments**:
-    -   `profile_name: str`: The name of the profile to switch to.
--   **Returns**: Switch result and schema loading status.
+    -   `profileName: str`: Name of the profile to switch to.
+-   **Returns**: JSON object with success status, profile information, and schema counts.
 
 #### `get_current_profile`
--   **Description**: Gets information about the currently active profile.
+-   **Description**: Gets information about the current profile.
 -   **Arguments**: None.
--   **Returns**: Current profile name, path, and schema loading status.
+-   **Returns**: JSON object with current profile information and schema counts.
 
 #### `reload_schema`
 -   **Description**: Reloads schema data from the current profile.
 -   **Arguments**: None.
--   **Returns**: Reload result and before/after data counts.
+-   **Returns**: JSON object with reload status and before/after schema counts.
+
+#### `create_profile`
+-   **Description**: Creates a new profile directory with optional initial schema files.
+-   **Arguments**:
+    -   `profileName: str`: Name of the profile to create.
+    -   `description: str` (optional): Optional description for the profile.
+    -   `createSampleFiles: bool` (optional): Whether to create sample CSV files. Defaults to `false`.
+-   **Returns**: JSON object with creation status and created files list.
+
+#### `generate_csv`
+-   **Description**: Generates CSV files for schema data based on specified types.
+-   **Arguments**:
+    -   `csvType: str`: Type of CSV to generate: 'tables', 'columns', 'relations', or 'all'.
+    -   `outputPath: str` (optional): Output directory path (defaults to current profile directory).
+-   **Returns**: JSON object with generation status and file information.
 
 ### Profile Validation Tools
 
-These tools allow validation of profile CSV file settings.
+These tools allow validation of profile CSV file settings and ensure data integrity.
 
 #### `validate_profile`
 -   **Description**: Validates CSV file settings for the specified profile.
 -   **Arguments**:
-    -   `profile_name: str` (optional): Profile name to validate. If omitted, validates the current profile.
--   **Returns**: Validation results and detailed report.
+    -   `profileName: str` (optional): Profile name to validate. If omitted, validates the current profile.
+-   **Returns**: JSON object with validation results, errors, warnings, and detailed report.
 
 #### `list_available_profiles`
 -   **Description**: Gets a list of available profiles.
 -   **Arguments**: None.
--   **Returns**: Profile list and file existence status for each profile.
+-   **Returns**: JSON object with list of available profiles and their completeness status.
 
 #### `validate_all_profiles`
 -   **Description**: Validates all available profiles.
 -   **Arguments**: None.
--   **Returns**: Summary of validation results for all profiles.
+-   **Returns**: JSON object with validation summary for all profiles.
