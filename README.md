@@ -1,8 +1,7 @@
 # SQL Schema Bridge MCP Server
 
 [![dotnet](https://img.shields.io/badge/-.NET%208.0-blueviolet?logo=dotnet)](https://img.shields.io/badge/-.NET%208.0-blueviolet?logo=dotnet)
-[![GitHub release)](https://img.shields.io/github/v/release/yt3trees/SqlSchemaBridgeMCP)](https://github.com/yt3trees/SqlSchemaBridgeMCP/releases/latest)
-![GitHub Release Date](https://img.shields.io/github/release-date/yt3trees/SqlSchemaBridgeMCP)
+![nuget](https://img.shields.io/nuget/v/SqlSchemaBridgeMCP)
 
 ## Overview
 
