@@ -1,0 +1,14 @@
+{
+  "servers": {
+    "SqlSchemaBridgeMCP": {
+      "type": "stdio",
+      "command": "dotnet",
+      "args": [
+        "run",
+        "--",
+        "mcp",
+        "start"
+      ]
+    }
+  }
+}
