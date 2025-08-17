@@ -76,14 +76,18 @@ You have two options for installing the MCP server.
 2.  Download the release package for your operating system (e.g., `SqlSchemaBridgeMCP-win-x64.zip`).
 3.  Extract the downloaded zip file to a location of your choice.
 
-This is the easiest method as it includes the .NET runtime and does not require any additional installations. Note that when a new version is released, you will need to download it manually to get the latest updates.
+> [!NOTE]  
+> This is the easiest method as it includes the .NET runtime and does not require any additional installations. Note that when a new version is released, you will need to download it manually to get the latest updates.
 
 #### Option 2: Install from NuGet using dnx
 
 This option is for users who have the .NET SDK installed and prefer to use the `dnx` command-line tool.
 
 1.  **Prerequisite**: Install the [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet) or a later version.
-2.  The `dnx` command will automatically fetch the `SqlSchemaBridgeMCP` package from NuGet the first time you run it, ensuring you are using the latest version available.
+
+> [!TIP]
+> The `dnx` command will automatically fetch the `SqlSchemaBridgeMCP` package from NuGet the first time you run it, ensuring you are using the latest version available.
+
 
 ### 2. MCP Client Configuration
 
