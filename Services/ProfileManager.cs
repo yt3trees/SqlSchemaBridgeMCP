@@ -20,8 +20,23 @@ public class ProfileManager
     {
         _logger = logger;
 
-        var documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-        var rootDirectory = Path.Combine(documentsPath, "SqlSchemaBridgeMCP");
+        var rootDirectory = GetBaseDirectory();
+
+        // Ensure the root directory for profiles exists.
+        if (!Directory.Exists(rootDirectory))
+        {
+            try
+            {
+                Directory.CreateDirectory(rootDirectory);
+                _logger.LogInformation("Created profile root directory: {Path}", rootDirectory);
+            }
+            catch (Exception ex)
+            {
+                // Log the error but continue, as the application might still function for some operations.
+                _logger.LogError(ex, "Failed to create profile root directory: {Path}", rootDirectory);
+            }
+        }
+
         _settingsFile = Path.Combine(rootDirectory, ".current_profile");
 
         // Load current profile with priority order:
@@ -130,13 +145,17 @@ public class ProfileManager
 
     public string GetProfileDirectory(string profileName)
     {
-        var documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-        return Path.Combine(documentsPath, "SqlSchemaBridgeMCP", profileName);
+        return Path.Combine(GetBaseDirectory(), profileName);
     }
 
     public string GetProfilesRootDirectory()
     {
-        var documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-        return Path.Combine(documentsPath, "SqlSchemaBridgeMCP");
+        return GetBaseDirectory();
+    }
+
+    private string GetBaseDirectory()
+    {
+        var userProfilePath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        return Path.Combine(userProfilePath, ".SqlSchemaBridgeMCP");
     }
 }

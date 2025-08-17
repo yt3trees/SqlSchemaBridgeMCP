@@ -86,16 +86,16 @@ sequenceDiagram
 
 #### メタデータファイルの作成
 
-サーバーは、ユーザのドキュメントフォルダ内に配置された専用フォルダ内のCSVファイルからスキーマ情報を読み込みます。
+サーバーは、ユーザーのホームディレクトリ配下に作成された専用フォルダ内のCSVファイルからスキーマ情報を読み込みます。
 
 **ディレクトリ構造:**
 
-まず、ドキュメントフォルダ（`C:\Users\<UserName>\Documents`）に`SqlSchemaBridgeMCP`という名前のフォルダが必要です。このフォルダがまだ存在しない場合は、手動で作成する必要があります。
+まず、ユーザーのホームディレクトリ（Windowsであれば `C:\Users\<UserName>`、macOS/Linuxであれば `~/`）に `.SqlSchemaBridgeMCP` という名前のフォルダが必要です。このフォルダがまだ存在しない場合は、手動で作成する必要があります。
 
-`SqlSchemaBridgeMCP`ディレクトリを設置したら、その中に使用したい各プロファイル用のサブディレクトリを作成します。
+`.SqlSchemaBridgeMCP`ディレクトリを設置したら、その中に使用したい各プロファイル用のサブディレクトリを作成します。
 
 ```
-\SqlSchemaBridgeMCP
+\.SqlSchemaBridgeMCP
 |-- \ProjectA
 |   |-- tables.csv
 |   |-- columns.csv
@@ -108,7 +108,7 @@ sequenceDiagram
 
 #### サンプルプロファイルの作成: `ProjectA`
 
-以下のファイルを `C:\Users\<UserName>\Documents\SqlSchemaBridgeMCP\ProjectA` ディレクトリに作成します。
+以下のファイルを `C:\Users\<UserName>\.SqlSchemaBridgeMCP\ProjectA` ディレクトリに作成します。
 
 **`tables.csv`**
 ```csv

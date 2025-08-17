@@ -86,16 +86,16 @@ Follow these steps to download, configure, and run the server.
 
 #### Create Metadata Files
 
-The server loads schema information from CSV files located in a dedicated folder within your user's documents directory.
+The server loads schema information from CSV files located in a dedicated folder within your user's home directory.
 
 **Directory Structure:**
 
-First, you will need a folder named `SqlSchemaBridgeMCP` inside your user's Documents folder (`C:\Users\<UserName>\Documents`). If this folder does not already exist, you must create it manually.
+First, you will need a folder named `.SqlSchemaBridgeMCP` inside your user's home directory (e.g., `C:\Users\<UserName>` on Windows or `~/` on macOS/Linux). If this folder does not already exist, you must create it manually.
 
-Once the `SqlSchemaBridgeMCP` directory is in place, create a subdirectory inside it for each profile you want to use.
+Once the `.SqlSchemaBridgeMCP` directory is in place, create a subdirectory inside it for each profile you want to use.
 
 ```
-\SqlSchemaBridgeMCP
+\.SqlSchemaBridgeMCP
 |-- \ProjectA
 |   |-- tables.csv
 |   |-- columns.csv
@@ -108,7 +108,7 @@ Once the `SqlSchemaBridgeMCP` directory is in place, create a subdirectory insid
 
 #### Create Example Profile: `ProjectA`
 
-Create the files below in the `C:\Users\<UserName>\Documents\SqlSchemaBridgeMCP\ProjectA` directory.
+Create the files below in the `C:\Users\<UserName>\.SqlSchemaBridgeMCP\ProjectA` directory.
 
 **`tables.csv`**
 ```csv
