@@ -262,7 +262,7 @@ dotnet publish -c Release -r osx-x64 --self-contained true
 -   **戻り値**: CSV形式のテーブルデータ。
 
 #### `find_column`
--   **説明**: 論理名または物理名で列を検索し、結果をCSV形式で返します。検索はtable_nameで絞り込むことができます。table_nameのみが指定された場合、そのテーブルのすべての列が返されます。**注意**: 結果が大きすぎてトークン制限の問題を引き起こす場合は、exactMatch=trueを使用してより具体的な結果を取得してください。
+-   **説明**: 論理名または物理名で列を検索し、結果をCSV形式で返します。検索はtable_nameで絞り込むことができます。table_nameのみが指定された場合、そのテーブルのすべての列が返されます。**推奨**: テーブル名でフィルターをかける際は、まずexactMatch=trueを使用してより正確な結果を取得することをお勧めします。**注意**: 結果が大きすぎてトークン制限の問題を引き起こす場合は、exactMatch=trueを使用してより具体的な結果を取得してください。
 -   **引数**:
     -   `logicalName: str` (任意): 列の論理名 (例: "Customer Name")。
     -   `physicalName: str` (任意): 列の物理名 (例: "CUSTOMER_NAME")。

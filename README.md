@@ -262,7 +262,7 @@ These tools allow the agent to inspect the database schema and return results in
 -   **Returns**: CSV format table data.
 
 #### `find_column`
--   **Description**: Searches for columns by logical or physical name and returns results in CSV format. The search can be filtered by providing a table_name. If only a table_name is provided, all columns for that table are returned. **Note**: If the result is too large and causes token limit issues, try using exactMatch=true to get more specific results.
+-   **Description**: Searches for columns by logical or physical name and returns results in CSV format. The search can be filtered by providing a table_name. If only a table_name is provided, all columns for that table are returned. **Recommendation**: When filtering by table name, use exactMatch=true first for more precise results. **Note**: If the result is too large and causes token limit issues, try using exactMatch=true to get more specific results.
 -   **Arguments**:
     -   `logicalName: str` (optional): The logical name of the column (e.g., "Customer Name").
     -   `physicalName: str` (optional): The physical name of the column (e.g., "CUSTOMER_NAME").
