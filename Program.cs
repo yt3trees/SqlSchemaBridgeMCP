@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using SqlSchemaBridgeMCP.Repositories;
 using SqlSchemaBridgeMCP.Services;
 using SqlSchemaBridgeMCP.Tools;
 
@@ -15,6 +16,7 @@ builder.Services.AddSingleton<SchemaProvider>();
 builder.Services.AddSingleton<SchemaEditorService>();
 builder.Services.AddSingleton<CsvConverterService>();
 builder.Services.AddSingleton<ProfileValidationService>();
+builder.Services.AddSingleton<ISchemaRepository, SchemaRepository>();
 
 // Add the MCP services: the transport to use (stdio) and the tools to register.
 builder.Services
@@ -23,6 +25,7 @@ builder.Services
     .WithTools<SqlSchemaBridgeTools>()
     .WithTools<SqlSchemaEditorTools>()
     .WithTools<ProfileValidationTools>()
-    .WithTools<ProfileManagementTools>();
+    .WithTools<ProfileManagementTools>()
+    .WithTools<SqlValidationTools>();
 
 await builder.Build().RunAsync();
