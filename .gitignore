@@ -48,6 +48,10 @@ bld/
 # Mac files
 .DS_Store
 
+
+# vscode
+.vscode/
+
 # Gemini CLI specific
 .gemini/
 
