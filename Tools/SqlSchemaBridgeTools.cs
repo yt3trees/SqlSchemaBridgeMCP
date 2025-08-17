@@ -142,6 +142,13 @@ internal class SqlSchemaBridgeTools
             return "table_physical_name,logical_name,physical_name,data_type,description";
         }
 
+        const int maxResultCount = 1000;
+        if (results.Count > maxResultCount)
+        {
+            _logger.LogWarning("Too many results found: {Count}. Maximum allowed: {MaxCount}", results.Count, maxResultCount);
+            throw new InvalidOperationException($"Too many results found ({results.Count} items). Maximum allowed is {maxResultCount} items. Please specify a table name to narrow down the search or set exactMatch=true.");
+        }
+
         return _csvConverter.ConvertColumnsToCsv(results);
     }
 
