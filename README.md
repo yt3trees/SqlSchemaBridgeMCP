@@ -1,7 +1,7 @@
 # SQL Schema Bridge MCP Server
 
 [![dotnet](https://img.shields.io/badge/-.NET%208.0-blueviolet?logo=dotnet)](https://img.shields.io/badge/-.NET%208.0-blueviolet?logo=dotnet)
-![nuget](https://img.shields.io/nuget/v/SqlSchemaBridgeMCP)
+[![nuget](https://img.shields.io/nuget/v/SqlSchemaBridgeMCP)](https://www.nuget.org/packages/SqlSchemaBridgeMCP)
 
 ## Overview
 
