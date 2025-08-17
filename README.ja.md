@@ -1,5 +1,8 @@
 # SQL Schema Bridge MCPサーバー
 
+[![GitHub release)](https://img.shields.io/github/v/release/yt3trees/SqlSchemaBridgeMCP)](https://github.com/yt3trees/SqlSchemaBridgeMCP/releases/latest)
+[![License](https://img.shields.io/github/license/yt3trees/SqlSchemaBridgeMCP)](LICENSE)
+
 ## 概要
 
 ```mermaid
