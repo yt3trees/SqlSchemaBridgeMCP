@@ -1,7 +1,8 @@
 # SQL Schema Bridge MCPサーバー
 
+[![dotnet](https://img.shields.io/badge/-.NET%208.0-blueviolet?logo=dotnet)](https://img.shields.io/badge/-.NET%208.0-blueviolet?logo=dotnet)
 [![GitHub release)](https://img.shields.io/github/v/release/yt3trees/SqlSchemaBridgeMCP)](https://github.com/yt3trees/SqlSchemaBridgeMCP/releases/latest)
-[![License](https://img.shields.io/github/license/yt3trees/SqlSchemaBridgeMCP)](LICENSE)
+![GitHub Release Date](https://img.shields.io/github/release-date/yt3trees/SqlSchemaBridgeMCP)
 
 ## 概要
 
@@ -27,72 +28,112 @@ graph TB
     Agent -->|"スキーマに基づいてSQL生成"| User
 ```
 
-`SqlSchemaBridgeMCP`は、自然言語とSQLの間のギャップを埋めるために設計されたModel-Context-Protocol (MCP) サーバーです。AIエージェントにデータベーススキーマに関する必要なメタデータ（テーブル定義、列の詳細、リレーションシップなど）を提供し、エージェントがユーザーの質問に基づいてSQLクエリを正確に構築できるようにします。
+`SqlSchemaBridgeMCP`は、自然言語とSQLの間のギャップを埋めるために設計されたModel-Context-Protocol (MCP) サーバーです。AIエージェントにデータベーススキーマに関する必要なメタデータ(テーブル定義、列の詳細、リレーションシップなど)を提供し、エージェントがユーザーの質問に基づいてSQLクエリを正確に構築できるようにします。
 
 このサーバーは、ローカルのCSVファイルからデータベーススキーマ情報を読み込むため、ユーザーは特定のデータベース環境のメタデータを簡単に管理および更新できます。
 
 ## 動作の仕組み
 
-ユーザーがデータに関する質問（例：「各顧客の最新の注文日を表示して」）をすると、AIエージェントはこのMCPサーバーと対話してデータベースの構造を理解します。
+ユーザーがデータに関する質問(例：「各顧客の最新の注文日を表示して」)をすると、AIエージェントはこのMCPサーバーと対話してデータベースの構造を理解します。
 
 ```mermaid
 sequenceDiagram
     participant User as 👤 ユーザー
     participant Agent as 🤖 AIエージェント
     participant MCPServer as 🚀 MCPサーバー
-    participant DBInfo as 📄 データベース情報(.csv)
 
     User->>Agent: "顧客ごとの最新注文日を教えて"
-    Agent->>MCPServer: find_table<br>(logical_name="顧客")
-    MCPServer->>DBInfo: tables.csvを読み込み
-    DBInfo-->>MCPServer: "顧客" -> "Customers"
-    MCPServer-->>Agent: {"physical_name": "Customers", ...}
-    Agent->>MCPServer: find_table<br>(logical_name="注文")
-    MCPServer->>DBInfo: tables.csvを読み込み
-    DBInfo-->>MCPServer: "注文" -> "Orders"
-    MCPServer-->>Agent: {"physical_name": "Orders", ...}
-    Agent->>MCPServer: find_relations<br>(table_name="Customers")
-    MCPServer->>DBInfo: relations.csvを読み込み
-    DBInfo-->>MCPServer: "Customers.CustomerID <br>-> Orders.CustomerID"
-    MCPServer-->>Agent: {"source_table": "Customers", <br>"target_table": "Orders", ...}
-    Agent->>MCPServer: find_column<br>(logical_name="注文日")
-    MCPServer->>DBInfo: columns.csvを読み込み
-    DBInfo-->>MCPServer: "注文日" -> "OrderDate"
-    MCPServer-->>Agent: {"physical_name": "OrderDate", ...}
-    Agent->>User: SELECT <br>T1.CustomerName, MAX(T2.OrderDate)<br>FROM Customers AS T1 <br> JOIN Orders AS T2 <br>ON T1.CustomerID = T2.CustomerID <br>GROUP BY T1.CustomerName;
+
+    Agent->>MCPServer: スキーマ情報を問い合わせる (テーブル、列、リレーションなど)
+    note right of Agent: find_table, find_column等のツールを使用
+
+    MCPServer-->>Agent: スキーマのメタデータを返す
+
+    Agent->>User: SQLクエリを生成して返す
 ```
 
-1.  エージェントは`find_table`や`find_column`のようなツールを呼び出して、論理名（「顧客」、「注文日」）をデータベース内の物理的な対応物（`Customers`、`OrderDate`）にマッピングします。
-2.  エージェントは`find_relations`を使用して、テーブルがどのように接続されているか（例：`Customers.CustomerID` -> `Orders.CustomerID`）を発見します。
+1.  エージェントは`find_table`や`find_column`のようなツールを呼び出して、論理名(「顧客」、「注文日」)をデータベース内の物理的な対応物(`Customers`、`OrderDate`)にマッピングします。
+2.  エージェントは`find_relations`を使用して、テーブルがどのように接続されているか(例：`Customers.CustomerID` -> `Orders.CustomerID`)を発見します。
 3.  取得したメタデータを使用して、エージェントはユーザーの質問に答えるための正確なSQLクエリを組み立てます。
 
 ## 特徴
 
 -   **自然言語からSQLへ：** AIエージェントが自然言語の質問を正確なSQLクエリに翻訳するのを助けます。
 -   **ローカルでのメタデータ管理：** データベーススキーマ情報は、ローカルマシンに保存された簡単なCSVファイルを通じて管理されます。
--   **プロファイルサポート：** プロファイルを使用して、異なるデータベーススキーマ定義を簡単に切り替えることができます。これは、複数のプロジェクトや環境（開発、テスト、本番など）を管理するのに理想的です。
+-   **プロファイルサポート：** プロファイルを使用して、異なるデータベーススキーマ定義を簡単に切り替えることができます。これは、複数のプロジェクトや環境(開発、テスト、本番など)を管理するのに理想的です。
 
 ## 利用者向け: はじめに
 
-サーバーをダウンロードし、設定、実行する手順は以下の通りです。
+MCPサーバーを設定し、実行する手順は以下の通りです。
 
 ### 1. インストール
 
+MCPサーバーのインストールには2つの方法があります。
+
+#### オプション1：GitHubリリースからダウンロード
+
 1.  このプロジェクトの[GitHub Releases page](https://github.com/yt3trees/SqlSchemaBridgeMCP/releases)へアクセスします。
-2.  お使いのオペレーティングシステムに対応したリリースパッケージ（例: `SqlSchemaBridgeMCP-win-x64.zip`）をダウンロードします。
+2.  お使いのオペレーティングシステムに対応したリリースパッケージ(例: `SqlSchemaBridgeMCP-win-x64.zip`)をダウンロードします。
 3.  ダウンロードしたzipファイルを任意の場所に展開します。
 
-### 2. 設定
+この方法は、.NETランタイムが含まれており、追加のインストールが不要なため最も簡単です。新しいバージョンがリリースされた場合、最新の機能を利用するには手動で再度ダウンロードする必要がある点にご注意ください。
 
-#### メタデータファイルの作成
+#### オプション2：dnxを使用してNuGetからインストール
+
+このオプションは、.NET SDKがインストール済みで、`dnx`コマンドラインツールの利用を希望する方向けです。
+
+1.  **前提条件**: [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet)以降をインストールしてください。
+2.  `dnx`コマンドを初めて実行すると、`SqlSchemaBridgeMCP`パッケージがNuGetから自動的に取得され、常に最新のバージョンが使用されます。
+
+### 2. MCPクライアントの設定
+
+MCPクライアント(Gemini CLI等)からこのMCPサーバーを利用するには、クライアントがサーバーを起動できるように設定が必要です。クライアントの設定ファイル(例: `~/.gemini/settings.json`)に、以下の`mcpServers`設定を追加または更新します。
+
+#### オプション1の場合(GitHubリリース)
+
+```json
+{
+  "mcpServers": {
+    "SqlSchemaBridgeMCP": {
+      "type": "stdio",
+      "command": "C:\\path\\to\\your\\extracted\\folder\\SqlSchemaBridgeMCP.exe",
+      "args": []
+    }
+  }
+}
+```
+-   **`command`**: 展開した`SqlSchemaBridgeMCP.exe`への絶対パスに置き換えてください。
+-   macOSやLinuxの場合は、`command`を `./SqlSchemaBridgeMCP` のような実行可能ファイルへのパスに設定します。
+
+#### オプション2の場合(dnx)
+
+```json
+{
+  "mcpServers": {
+    "SqlSchemaBridgeMCP": {
+      "type": "stdio",
+      "command": "dnx",
+      "args": [
+        "SqlSchemaBridgeMCP",
+        "--yes"
+      ]
+    }
+  }
+}
+```
+- `dnx`コマンドがサーバーのダウンロードと実行を管理します。
+
+
+
+### 3. メタデータの設定
 
 サーバーは、ユーザーのホームディレクトリ配下に作成された専用フォルダ内のCSVファイルからスキーマ情報を読み込みます。
 
 **ディレクトリ構造:**
 
-まず、ユーザーのホームディレクトリ（Windowsであれば `C:\Users\<UserName>`、macOS/Linuxであれば `~/`）に `.SqlSchemaBridgeMCP` という名前のフォルダが必要です。このフォルダがまだ存在しない場合は、手動で作成する必要があります。
+サーバーは、ユーザーのホームディレクトリ(Windowsであれば `C:\Users\<UserName>`、macOS/Linuxであれば `~/`)に `.SqlSchemaBridgeMCP` という名前のフォルダを使用してプロファイルを管理します。このフォルダは、初回起動時に自動的に作成されます。
 
-`.SqlSchemaBridgeMCP`ディレクトリを設置したら、その中に使用したい各プロファイル用のサブディレクトリを作成します。
+`.SqlSchemaBridgeMCP`ディレクトリの中に、使用したい各プロファイル用のサブディレクトリを作成します。
 
 ```
 \.SqlSchemaBridgeMCP
@@ -146,30 +187,9 @@ T_ORDER_HEADERS,ORDER_ID,T_ORDER_DETAILS,ORDER_ID
 M_PRODUCTS,PRODUCT_ID,T_ORDER_DETAILS,PRODUCT_ID
 ```
 
-### 3. MCPクライアントの設定
-
-MCPクライアント（Gemini CLI等）からこのMCPサーバーを利用するには、クライアントがサーバーを起動できるように設定が必要です。
-
-`gemini`の設定ファイル（通常はユーザーのホームディレクトリの `.gemini/settings.json` にあります）に、以下の`mcpServers`設定を追加または更新します。
-
-```json
-{
-  "mcpServers": {
-    "SqlSchemaBridgeMCP": {
-      "type": "stdio",
-      "command": "C:\\path\\to\\your\\extracted\\folder\\SqlSchemaBridgeMCP.exe",
-      "args": []
-    }
-  }
-}
-```
-
 **設定のポイント:**
 
--   `command`: `SqlSchemaBridgeMCP.exe`の絶対パスに置き換えてください。これは、[インストール](#1-インストール)のステップでzipファイルを展開した場所です。
 -   **プロファイル設定不要**: サーバーは初回起動時に`default`プロファイルを使用し、`switch_profile`ツールで動的に切り替えできます。
-
-macOSやLinuxの場合は、`command`を `./SqlSchemaBridgeMCP` のような実行可能ファイルへのパスに設定します。
 
 ### 4. プロファイルの管理
 
@@ -185,7 +205,7 @@ AIまたはユーザーは以下のツールを使用してプロファイルを
 - **`list_available_profiles()`**: 利用可能なプロファイル一覧を表示
 
 #### 永続化
-- プロファイル切り替えは設定ファイル（`.current_profile`）に保存されます
+- プロファイル切り替えは設定ファイル(`.current_profile`)に保存されます
 - 次回起動時も同じプロファイルが自動的に使用されます
 
 ---
@@ -217,11 +237,11 @@ AIまたはユーザーは以下のツールを使用してプロファイルを
 - 開発時もプロファイル切り替えは`switch_profile`ツールを使用
 - 設定ファイルによる永続化により、開発セッション間でプロファイルが保持されます
 
-### リリースビルドの作成（自己完結型）
+### リリースビルドの作成(自己完結型)
 
 配布用に、サーバーを自己完結型アプリケーションとして公開することができます。これにより、.NETランタイムがインストールされていないマシンでもアプリケーションを実行できるように、.NETランタイムがアプリケーションにバンドルされます。
 
-`dotnet publish`コマンドを実行し、ターゲットランタイム識別子（RID）を指定します。
+`dotnet publish`コマンドを実行し、ターゲットランタイム識別子(RID)を指定します。
 
 ```sh
 # Windows x64向け
@@ -271,7 +291,7 @@ dotnet publish -c Release -r osx-x64 --self-contained true
     -   `physicalName: str` (任意): 列の物理名 (例: "CUSTOMER_NAME")。
     -   `tableName: str` (任意): 検索対象のテーブルの物理名 (例: "M_CUSTOMERS")。
     -   `exactMatch: bool` (任意): `true`の場合、大文字と小文字を区別しない完全一致を実行します。デフォルトは`false` (部分一致)。
--   **戻り値**: CSV形式の列データ（最大1000件）。
+-   **戻り値**: CSV形式の列データ(最大1000件)。
 
 #### `find_relations`
 -   **説明**: 指定されたテーブルのリレーションシップと結合条件を検索し、結果をCSV形式で返します。
@@ -368,7 +388,7 @@ dotnet publish -c Release -r osx-x64 --self-contained true
 -   **説明**: 指定されたタイプに基づいてスキーマデータのCSVファイルを生成します。
 -   **引数**:
     -   `csvType: str`: 生成するCSVのタイプ: 'tables'、'columns'、'relations'、または'all'。
-    -   `outputPath: str` (任意): 出力ディレクトリパス（デフォルトは現在のプロファイルディレクトリ）。
+    -   `outputPath: str` (任意): 出力ディレクトリパス(デフォルトは現在のプロファイルディレクトリ)。
 -   **戻り値**: 生成状況とファイル情報を含むJSONオブジェクト。
 
 ### プロファイル検証ツール

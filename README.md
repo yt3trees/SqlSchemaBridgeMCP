@@ -1,7 +1,8 @@
 # SQL Schema Bridge MCP Server
 
+[![dotnet](https://img.shields.io/badge/-.NET%208.0-blueviolet?logo=dotnet)](https://img.shields.io/badge/-.NET%208.0-blueviolet?logo=dotnet)
 [![GitHub release)](https://img.shields.io/github/v/release/yt3trees/SqlSchemaBridgeMCP)](https://github.com/yt3trees/SqlSchemaBridgeMCP/releases/latest)
-[![License](https://img.shields.io/github/license/yt3trees/SqlSchemaBridgeMCP)](LICENSE)
+![GitHub Release Date](https://img.shields.io/github/release-date/yt3trees/SqlSchemaBridgeMCP)
 
 ## Overview
 
@@ -40,26 +41,15 @@ sequenceDiagram
     participant User as 👤 User
     participant Agent as 🤖 AI Agent
     participant MCPServer as 🚀 MCP Server
-    participant DBInfo as 📄 Database Info (.csv)
 
     User->>Agent: "Show me the latest order date for each customer"
-    Agent->>MCPServer: find_table<br>(logical_name="customer")
-    MCPServer->>DBInfo: Read tables.csv
-    DBInfo-->>MCPServer: "customer" -> "Customers"
-    MCPServer-->>Agent: {"physical_name": "Customers", ...}
-    Agent->>MCPServer: find_table<br>(logical_name="order")
-    MCPServer->>DBInfo: Read tables.csv
-    DBInfo-->>MCPServer: "order" -> "Orders"
-    MCPServer-->>Agent: {"physical_name": "Orders", ...}
-    Agent->>MCPServer: find_relations<br>(table_name="Customers")
-    MCPServer->>DBInfo: Read relations.csv
-    DBInfo-->>MCPServer: "Customers.CustomerID <br>-> Orders.CustomerID"
-    MCPServer-->>Agent: {"source_table": "Customers", <br>"target_table": "Orders", ...}
-    Agent->>MCPServer: find_column<br>(logical_name="order date")
-    MCPServer->>DBInfo: Read columns.csv
-    DBInfo-->>MCPServer: "order date" -> "OrderDate"
-    MCPServer-->>Agent: {"physical_name": "OrderDate", ...}
-    Agent->>User: SELECT <br>T1.CustomerName, MAX(T2.OrderDate)<br>FROM Customers AS T1 <br> JOIN Orders AS T2 <br>ON T1.CustomerID = T2.CustomerID <br>GROUP BY T1.CustomerName;
+
+    Agent->>MCPServer: Inquire about schema (e.g., tables, columns, relations)
+    note right of Agent: Uses tools like find_table, find_column, etc.
+
+    MCPServer-->>Agent: Return schema metadata
+
+    Agent->>User: Generate and return SQL query
 ```
 
 1.  The agent calls tools like `find_table` and `find_column` to map logical names ("customer", "order date") to their physical counterparts in the database (`Customers`, `OrderDate`).
@@ -74,25 +64,76 @@ sequenceDiagram
 
 ## For Users: Getting Started
 
-Follow these steps to download, configure, and run the server.
+Follow these steps to configure and run the MCP server.
 
 ### 1. Installation
+
+You have two options for installing the MCP server.
+
+#### Option 1: Download from GitHub Releases
 
 1.  Go to the [GitHub Releases page](https://github.com/yt3trees/SqlSchemaBridgeMCP/releases) for this project.
 2.  Download the release package for your operating system (e.g., `SqlSchemaBridgeMCP-win-x64.zip`).
 3.  Extract the downloaded zip file to a location of your choice.
 
-### 2. Configuration
+This is the easiest method as it includes the .NET runtime and does not require any additional installations. Note that when a new version is released, you will need to download it manually to get the latest updates.
 
-#### Create Metadata Files
+#### Option 2: Install from NuGet using dnx
+
+This option is for users who have the .NET SDK installed and prefer to use the `dnx` command-line tool.
+
+1.  **Prerequisite**: Install the [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet) or a later version.
+2.  The `dnx` command will automatically fetch the `SqlSchemaBridgeMCP` package from NuGet the first time you run it, ensuring you are using the latest version available.
+
+### 2. MCP Client Configuration
+
+To use this MCP server with a client like the Gemini CLI, you need to configure the client to launch the server. Add or update the `mcpServers` configuration in your client's settings file (e.g., `~/.gemini/settings.json`).
+
+#### For Option 1 (GitHub Release)
+
+```json
+{
+  "mcpServers": {
+    "SqlSchemaBridgeMCP": {
+      "type": "stdio",
+      "command": "C:\\path\\to\\your\\extracted\\folder\\SqlSchemaBridgeMCP.exe",
+      "args": []
+    }
+  }
+}
+```
+-   **`command`**: Replace this with the absolute path to the `SqlSchemaBridgeMCP.exe` you extracted.
+-   For macOS or Linux, the `command` should be the path to the executable (e.g., `./SqlSchemaBridgeMCP`).
+
+#### For Option 2 (dnx)
+
+```json
+{
+  "mcpServers": {
+    "SqlSchemaBridgeMCP": {
+      "type": "stdio",
+      "command": "dnx",
+      "args": [
+        "SqlSchemaBridgeMCP",
+        "--yes"
+      ]
+    }
+  }
+}
+```
+- The `dnx` command handles the download and execution of the server.
+
+
+
+### 3. Metadata Configuration
 
 The server loads schema information from CSV files located in a dedicated folder within your user's home directory.
 
 **Directory Structure:**
 
-First, you will need a folder named `.SqlSchemaBridgeMCP` inside your user's home directory (e.g., `C:\Users\<UserName>` on Windows or `~/` on macOS/Linux). If this folder does not already exist, you must create it manually.
+The server uses a folder named `.SqlSchemaBridgeMCP` inside your user's home directory (e.g., `C:\Users\<UserName>` on Windows or `~/` on macOS/Linux) to manage profiles. This folder is created automatically on the first run.
 
-Once the `.SqlSchemaBridgeMCP` directory is in place, create a subdirectory inside it for each profile you want to use.
+Inside the `.SqlSchemaBridgeMCP` directory, create a subdirectory for each profile you want to use.
 
 ```
 \.SqlSchemaBridgeMCP
@@ -106,7 +147,7 @@ Once the `.SqlSchemaBridgeMCP` directory is in place, create a subdirectory insi
 |   |-- relations.csv
 ```
 
-#### Create Example Profile: `ProjectA`
+#### Example Profile: `ProjectA`
 
 Create the files below in the `C:\Users\<UserName>\.SqlSchemaBridgeMCP\ProjectA` directory.
 
@@ -146,30 +187,9 @@ T_ORDER_HEADERS,ORDER_ID,T_ORDER_DETAILS,ORDER_ID
 M_PRODUCTS,PRODUCT_ID,T_ORDER_DETAILS,PRODUCT_ID
 ```
 
-### 3. MCP Client Configuration
-
-To use this MCP server with MCP clients (e.g., Gemini CLI), you need to configure the client to launch the server.
-
-Add or update the `mcpServers` configuration in your client's settings file (for Gemini CLI, usually located at `~/.gemini/settings.json` on Linux/macOS or `%USERPROFILE%\.gemini\settings.json` on Windows) with the following:
-
-```json
-{
-  "mcpServers": {
-    "SqlSchemaBridgeMCP": {
-      "type": "stdio",
-      "command": "C:\\path\\to\\your\\extracted\\folder\\SqlSchemaBridgeMCP.exe",
-      "args": []
-    }
-  }
-}
-```
-
 **Key Configuration Points:**
 
--   `command`: Replace this with the absolute path to your `SqlSchemaBridgeMCP.exe`. This is the location where you extracted the zip file in the [Installation](#1-installation) step.
 -   **No Profile Configuration Required**: The server automatically uses the `default` profile on first startup and allows dynamic switching using the `switch_profile` tool.
-
-For macOS or Linux, the `command` should be the path to the executable, like `./SqlSchemaBridgeMCP`.
 
 ### 4. Profile Management
 
