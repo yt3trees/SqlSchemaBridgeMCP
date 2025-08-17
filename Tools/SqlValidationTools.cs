@@ -111,15 +111,25 @@ public class SqlValidationTools
             var referencedTables = ExtractTableNames(sqlQuery);
             var existingTables = await _schemaRepository.GetAllTablesAsync();
 
+            // Create a set of unique simple table names (without database.schema prefixes)
+            var uniqueTableNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            
             foreach (var table in referencedTables)
             {
+                // Extract simple table name (last part after dots)
+                var simpleName = table.Split('.').Last();
+                uniqueTableNames.Add(simpleName);
+            }
+
+            foreach (var tableName in uniqueTableNames)
+            {
                 var foundTable = existingTables.FirstOrDefault(t => 
-                    string.Equals(t.PhysicalName, table, StringComparison.OrdinalIgnoreCase) ||
-                    string.Equals(t.LogicalName, table, StringComparison.OrdinalIgnoreCase));
+                    string.Equals(t.PhysicalName, tableName, StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(t.LogicalName, tableName, StringComparison.OrdinalIgnoreCase));
 
                 if (foundTable == null)
                 {
-                    result.Errors.Add($"Table '{table}' not found in schema");
+                    result.Errors.Add($"Table '{tableName}' not found in schema");
                     result.IsValid = false;
                 }
             }
@@ -130,6 +140,12 @@ public class SqlValidationTools
 
             foreach (var (table, column) in referencedColumns)
             {
+                // Skip validation for obviously invalid column names (too short, etc.)
+                if (string.IsNullOrWhiteSpace(column) || column.Length < 2)
+                {
+                    continue;
+                }
+
                 var foundColumn = existingColumns.FirstOrDefault(c => 
                     (string.IsNullOrEmpty(table) || string.Equals(c.TablePhysicalName, table, StringComparison.OrdinalIgnoreCase)) &&
                     (string.Equals(c.PhysicalName, column, StringComparison.OrdinalIgnoreCase) ||
@@ -219,7 +235,8 @@ public class SqlValidationTools
         analysis.TablesReferenced = ExtractTableNames(sqlQuery);
 
         // Extract column references
-        analysis.ColumnsReferenced = ExtractColumnReferences(sqlQuery);
+        var columnRefs = ExtractColumnReferences(sqlQuery);
+        analysis.ColumnsReferenced = columnRefs.Select(cr => new ColumnReference { Table = cr.Table, Column = cr.Column }).ToList();
 
         // Extract JOIN types
         analysis.JoinTypes = ExtractJoinTypes(sqlQuery);
@@ -248,18 +265,31 @@ public class SqlValidationTools
     {
         var tables = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        // Extract table names from FROM clause
-        var fromMatches = Regex.Matches(sqlQuery, @"\bFROM\s+([a-zA-Z_][a-zA-Z0-9_]*)", RegexOptions.IgnoreCase);
-        foreach (Match match in fromMatches)
-        {
-            tables.Add(match.Groups[1].Value);
-        }
+        // Pattern to match: [database.[schema.]]table [alias]
+        // Supports: table, schema.table, database.schema.table
+        var tablePattern = @"\b(?:FROM|JOIN)\s+(?:([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*\.[a-zA-Z_][a-zA-Z0-9_]*)|([a-zA-Z_][a-zA-Z0-9_]*\.[a-zA-Z_][a-zA-Z0-9_]*)|([a-zA-Z_][a-zA-Z0-9_]*))(?:\s+(?:AS\s+)?[a-zA-Z_][a-zA-Z0-9_]*)?";
 
-        // Extract table names from JOIN clause
-        var joinMatches = Regex.Matches(sqlQuery, @"\bJOIN\s+([a-zA-Z_][a-zA-Z0-9_]*)", RegexOptions.IgnoreCase);
-        foreach (Match match in joinMatches)
+        var matches = Regex.Matches(sqlQuery, tablePattern, RegexOptions.IgnoreCase);
+        foreach (Match match in matches)
         {
-            tables.Add(match.Groups[1].Value);
+            // Extract the full table name (database.schema.table, schema.table, or table)
+            var fullTableName = match.Groups[1].Success ? match.Groups[1].Value :
+                               match.Groups[2].Success ? match.Groups[2].Value :
+                               match.Groups[3].Value;
+
+            if (!string.IsNullOrEmpty(fullTableName))
+            {
+                // Extract just the table name (last part after final dot)
+                var parts = fullTableName.Split('.');
+                var tableName = parts[^1]; // Last element
+                tables.Add(tableName);
+
+                // Also add the full qualified name for schema validation
+                if (parts.Length > 1)
+                {
+                    tables.Add(fullTableName);
+                }
+            }
         }
 
         return tables.ToList();
@@ -269,11 +299,26 @@ public class SqlValidationTools
     {
         var columns = new List<(string, string)>();
 
-        // Extract qualified column references (table.column format)
+        // Extract table alias mappings first
+        var aliasMap = ExtractTableAliases(sqlQuery);
+
+        // Extract qualified column references (alias.column or table.column format)
+        // Exclude database.schema patterns by being more specific
         var qualifiedMatches = Regex.Matches(sqlQuery, @"\b([a-zA-Z_][a-zA-Z0-9_]*)\.([a-zA-Z_][a-zA-Z0-9_]*)\b", RegexOptions.IgnoreCase);
         foreach (Match match in qualifiedMatches)
         {
-            columns.Add((match.Groups[1].Value, match.Groups[2].Value));
+            var tableOrAlias = match.Groups[1].Value;
+            var columnName = match.Groups[2].Value;
+
+            // Skip if this looks like a database.schema pattern
+            if (IsLikelyDatabaseOrSchema(tableOrAlias, sqlQuery))
+            {
+                continue;
+            }
+
+            // Resolve alias to actual table name if possible
+            var actualTable = aliasMap.ContainsKey(tableOrAlias) ? aliasMap[tableOrAlias] : tableOrAlias;
+            columns.Add((actualTable, columnName));
         }
 
         // Extract simple column names from SELECT clause
@@ -292,6 +337,36 @@ public class SqlValidationTools
         }
 
         return columns;
+    }
+
+    private Dictionary<string, string> ExtractTableAliases(string sqlQuery)
+    {
+        var aliases = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        // Pattern to match table aliases: table_name [AS] alias
+        var aliasPattern = @"\b(?:FROM|JOIN)\s+(?:[a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*\.)?([a-zA-Z_][a-zA-Z0-9_]*)\s+(?:AS\s+)?([a-zA-Z_][a-zA-Z0-9_]*)\b";
+        
+        var matches = Regex.Matches(sqlQuery, aliasPattern, RegexOptions.IgnoreCase);
+        foreach (Match match in matches)
+        {
+            var tableName = match.Groups[1].Value;
+            var aliasName = match.Groups[2].Value;
+            
+            // Don't add if alias is the same as table name
+            if (!string.Equals(tableName, aliasName, StringComparison.OrdinalIgnoreCase))
+            {
+                aliases[aliasName] = tableName;
+            }
+        }
+
+        return aliases;
+    }
+
+    private bool IsLikelyDatabaseOrSchema(string identifier, string sqlQuery)
+    {
+        // Check if this identifier appears as part of a longer qualified name
+        var pattern = $@"\b{Regex.Escape(identifier)}\.[a-zA-Z_][a-zA-Z0-9_]*\.[a-zA-Z_][a-zA-Z0-9_]*\b";
+        return Regex.IsMatch(sqlQuery, pattern, RegexOptions.IgnoreCase);
     }
 
     private List<string> ExtractJoinTypes(string sqlQuery)
