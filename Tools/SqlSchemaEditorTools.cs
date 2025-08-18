@@ -21,14 +21,47 @@ internal class SqlSchemaEditorTools
     }
 
     [McpServerTool]
-    [Description("Adds a new table definition to tables.csv.")]
-    public string AddTable(
-        [Description("The logical name of the table (e.g., 'Customers').")] string logicalName,
-        [Description("The physical name of the table (e.g., 'M_CUSTOMERS').")] string physicalName,
-        [Description("The primary key of the table (e.g., 'CUSTOMER_ID').")] string primaryKey,
-        [Description("A description of the table.")] string description,
-        [Description("The physical name of the database.")] string? databaseName = null,
-        [Description("The physical name of the schema.")] string? schemaName = null)
+    [Description("Manages schema elements (tables, columns, relations) with add/delete operations.")]
+    public string ManageSchema(
+        [Description("The operation to perform: 'add' or 'delete'.")] string operation,
+        [Description("The type of element: 'table', 'column', or 'relation'.")] string elementType,
+        [Description("The logical name (for tables/columns).")] string? logicalName = null,
+        [Description("The physical name (for tables/columns) or physical name of the table (for columns).")] string? physicalName = null,
+        [Description("The primary key (for tables) or data type (for columns).")] string? primaryKeyOrDataType = null,
+        [Description("Description of the element.")] string? description = null,
+        [Description("Database name (for tables).")] string? databaseName = null,
+        [Description("Schema name (for tables).")] string? schemaName = null,
+        [Description("Table physical name (for columns) or source table (for relations).")] string? tablePhysicalNameOrSourceTable = null,
+        [Description("Source column (for relations).")] string? sourceColumn = null,
+        [Description("Target table (for relations).")] string? targetTable = null,
+        [Description("Target column (for relations).")] string? targetColumn = null)
+    {
+        var op = operation.ToLowerInvariant();
+        var type = elementType.ToLowerInvariant();
+
+        switch (type)
+        {
+            case "table":
+                return op == "add" 
+                    ? AddTableInternal(logicalName!, physicalName!, primaryKeyOrDataType!, description, databaseName, schemaName)
+                    : DeleteTableInternal(physicalName!);
+
+            case "column":
+                return op == "add"
+                    ? AddColumnInternal(tablePhysicalNameOrSourceTable!, logicalName!, physicalName!, primaryKeyOrDataType!, description)
+                    : DeleteColumnInternal(tablePhysicalNameOrSourceTable!, physicalName!);
+
+            case "relation":
+                return op == "add"
+                    ? AddRelationInternal(tablePhysicalNameOrSourceTable!, sourceColumn!, targetTable!, targetColumn!)
+                    : DeleteRelationInternal(tablePhysicalNameOrSourceTable!, sourceColumn!, targetTable!, targetColumn!);
+
+            default:
+                return $"Invalid element type '{elementType}'. Must be 'table', 'column', or 'relation'.";
+        }
+    }
+
+    private string AddTableInternal(string logicalName, string physicalName, string primaryKey, string? description, string? databaseName, string? schemaName)
     {
         _logger.LogInformation("Executing AddTable tool for {PhysicalName}", physicalName);
         var table = new Table { DatabaseName = databaseName, SchemaName = schemaName, LogicalName = logicalName, PhysicalName = physicalName, PrimaryKey = primaryKey, Description = description };
@@ -36,23 +69,14 @@ internal class SqlSchemaEditorTools
         return $"Successfully added table '{physicalName}'.";
     }
 
-    [McpServerTool]
-    [Description("Deletes a table definition from tables.csv.")]
-    public string DeleteTable([Description("The physical name of the table to delete.")] string physicalName)
+    private string DeleteTableInternal(string physicalName)
     {
         _logger.LogInformation("Executing DeleteTable tool for {PhysicalName}", physicalName);
         _editorService.DeleteRecords<Table>(t => t.PhysicalName.Equals(physicalName, StringComparison.OrdinalIgnoreCase), "tables.csv");
         return $"Successfully deleted table '{physicalName}'.";
     }
 
-    [McpServerTool]
-    [Description("Adds a new column definition to columns.csv.")]
-    public string AddColumn(
-        [Description("The physical name of the table this column belongs to.")] string tablePhysicalName,
-        [Description("The logical name of the column.")] string logicalName,
-        [Description("The physical name of the column.")] string physicalName,
-        [Description("The data type of the column.")] string dataType,
-        [Description("A description of the column.")] string? description = null)
+    private string AddColumnInternal(string tablePhysicalName, string logicalName, string physicalName, string dataType, string? description)
     {
         _logger.LogInformation("Executing AddColumn tool for {TablePhysicalName}.{PhysicalName}", tablePhysicalName, physicalName);
         var column = new Column { TablePhysicalName = tablePhysicalName, LogicalName = logicalName, PhysicalName = physicalName, DataType = dataType, Description = description };
@@ -60,11 +84,7 @@ internal class SqlSchemaEditorTools
         return $"Successfully added column '{physicalName}' to table '{tablePhysicalName}'.";
     }
 
-    [McpServerTool]
-    [Description("Deletes a column definition from columns.csv.")]
-    public string DeleteColumn(
-        [Description("The physical name of the table the column belongs to.")] string tablePhysicalName,
-        [Description("The physical name of the column to delete.")] string physicalName)
+    private string DeleteColumnInternal(string tablePhysicalName, string physicalName)
     {
         _logger.LogInformation("Executing DeleteColumn tool for {TablePhysicalName}.{PhysicalName}", tablePhysicalName, physicalName);
         _editorService.DeleteRecords<Column>(c =>
@@ -74,13 +94,7 @@ internal class SqlSchemaEditorTools
         return $"Successfully deleted column '{physicalName}' from table '{tablePhysicalName}'.";
     }
 
-    [McpServerTool]
-    [Description("Adds a new relationship definition to relations.csv.")]
-    public string AddRelation(
-        [Description("The source table's physical name.")] string sourceTable,
-        [Description("The source column's physical name.")] string sourceColumn,
-        [Description("The target table's physical name.")] string targetTable,
-        [Description("The target column's physical name.")] string targetColumn)
+    private string AddRelationInternal(string sourceTable, string sourceColumn, string targetTable, string targetColumn)
     {
         _logger.LogInformation("Executing AddRelation tool for {SourceTable} -> {TargetTable}", sourceTable, targetTable);
         var relation = new Relation { SourceTable = sourceTable, SourceColumn = sourceColumn, TargetTable = targetTable, TargetColumn = targetColumn };
@@ -88,13 +102,7 @@ internal class SqlSchemaEditorTools
         return $"Successfully added relation between '{sourceTable}' and '{targetTable}'.";
     }
 
-    [McpServerTool]
-    [Description("Deletes a relationship definition from relations.csv.")]
-    public string DeleteRelation(
-        [Description("The source table's physical name.")] string sourceTable,
-        [Description("The source column's physical name.")] string sourceColumn,
-        [Description("The target table's physical name.")] string targetTable,
-        [Description("The target column's physical name.")] string targetColumn)
+    private string DeleteRelationInternal(string sourceTable, string sourceColumn, string targetTable, string targetColumn)
     {
         _logger.LogInformation("Executing DeleteRelation tool for {SourceTable} -> {TargetTable}", sourceTable, targetTable);
         _editorService.DeleteRecords<Relation>(r =>

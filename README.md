@@ -14,7 +14,7 @@ graph TB
 
     subgraph "Available MCP Tools"
         QueryTools["🔍 Schema Querying<br/>(find_table, find_column, find_relations)"]
-        EditTools["✏️ Schema Editing<br/>(add_table, add_column, add_relation)"]
+        EditTools["✏️ Schema Editing<br/>(manage_schema)"]
     end
 
     %% Main Flow
@@ -261,7 +261,7 @@ The output will be placed in the `bin/Release/net8.0/<RID>/publish/` directory.
 
 ## Available Tools
 
-The server exposes a comprehensive set of 18 tools for the AI agent, divided into four main categories: schema querying, schema editing, profile management, and profile validation.
+The server exposes a comprehensive set of 13 tools for the AI agent, divided into four main categories: schema querying, schema editing, profile management, and profile validation.
 
 ### Schema Querying Tools
 
@@ -307,57 +307,54 @@ These tools allow the agent to inspect the database schema and return results in
 
 These tools allow the agent to modify the schema by editing the underlying CSV files.
 
-#### `add_table`
--   **Description**: Adds a new table definition to `tables.csv`.
+#### `manage_schema`
+-   **Description**: Manages schema elements (tables, columns, relations) with add/delete operations.
 -   **Arguments**:
-    -   `logicalName: str`: The logical name of the table (e.g., "Customers").
-    -   `physicalName: str`: The physical name of the table (e.g., "M_CUSTOMERS").
-    -   `primaryKey: str`: The primary key of the table (e.g., "CUSTOMER_ID").
-    -   `description: str`: A description of the table.
-    -   `databaseName: str` (optional): The physical name of the database.
-    -   `schemaName: str` (optional): The physical name of the schema.
+    -   `operation: str`: The operation to perform: 'add' or 'delete'.
+    -   `elementType: str`: The type of element: 'table', 'column', or 'relation'.
+    -   `logicalName: str` (optional): The logical name (for tables/columns).
+    -   `physicalName: str` (optional): The physical name (for tables/columns) or physical name of the table (for columns).
+    -   `primaryKeyOrDataType: str` (optional): The primary key (for tables) or data type (for columns).
+    -   `description: str` (optional): Description of the element.
+    -   `databaseName: str` (optional): Database name (for tables).
+    -   `schemaName: str` (optional): Schema name (for tables).
+    -   `tablePhysicalNameOrSourceTable: str` (optional): Table physical name (for columns) or source table (for relations).
+    -   `sourceColumn: str` (optional): Source column (for relations).
+    -   `targetTable: str` (optional): Target table (for relations).
+    -   `targetColumn: str` (optional): Target column (for relations).
 -   **Returns**: Success message.
 
-#### `delete_table`
--   **Description**: Deletes a table definition from `tables.csv`.
--   **Arguments**:
-    -   `physicalName: str`: The physical name of the table to delete.
--   **Returns**: Success message.
+**Usage Examples:**
 
-#### `add_column`
--   **Description**: Adds a new column definition to `columns.csv`.
--   **Arguments**:
-    -   `tablePhysicalName: str`: The physical name of the table this column belongs to.
-    -   `logicalName: str`: The logical name of the column.
-    -   `physicalName: str`: The physical name of the column.
-    -   `dataType: str`: The data type of the column.
-    -   `description: str` (optional): A description of the column.
--   **Returns**: Success message.
+**Add Table:**
+```
+manage_schema(operation="add", elementType="table", logicalName="Customers", physicalName="M_CUSTOMERS", primaryKeyOrDataType="CUSTOMER_ID", description="Customer master table")
+```
 
-#### `delete_column`
--   **Description**: Deletes a column definition from `columns.csv`.
--   **Arguments**:
-    -   `tablePhysicalName: str`: The physical name of the table the column belongs to.
-    -   `physicalName: str`: The physical name of the column to delete.
--   **Returns**: Success message.
+**Delete Table:**
+```
+manage_schema(operation="delete", elementType="table", physicalName="M_CUSTOMERS")
+```
 
-#### `add_relation`
--   **Description**: Adds a new relationship definition to `relations.csv`.
--   **Arguments**:
-    -   `sourceTable: str`: The source table's physical name.
-    -   `sourceColumn: str`: The source column's physical name.
-    -   `targetTable: str`: The target table's physical name.
-    -   `targetColumn: str`: The target column's physical name.
--   **Returns**: Success message.
+**Add Column:**
+```
+manage_schema(operation="add", elementType="column", tablePhysicalNameOrSourceTable="M_CUSTOMERS", logicalName="Customer Name", physicalName="CUSTOMER_NAME", primaryKeyOrDataType="nvarchar(100)", description="Name of the customer")
+```
 
-#### `delete_relation`
--   **Description**: Deletes a relationship definition from `relations.csv`.
--   **Arguments**:
-    -   `sourceTable: str`: The source table's physical name.
-    -   `sourceColumn: str`: The source column's physical name.
-    -   `targetTable: str`: The target table's physical name.
-    -   `targetColumn: str`: The target column's physical name.
--   **Returns**: Success message.
+**Delete Column:**
+```
+manage_schema(operation="delete", elementType="column", tablePhysicalNameOrSourceTable="M_CUSTOMERS", physicalName="CUSTOMER_NAME")
+```
+
+**Add Relation:**
+```
+manage_schema(operation="add", elementType="relation", tablePhysicalNameOrSourceTable="M_CUSTOMERS", sourceColumn="CUSTOMER_ID", targetTable="T_ORDER_HEADERS", targetColumn="CUSTOMER_ID")
+```
+
+**Delete Relation:**
+```
+manage_schema(operation="delete", elementType="relation", tablePhysicalNameOrSourceTable="M_CUSTOMERS", sourceColumn="CUSTOMER_ID", targetTable="T_ORDER_HEADERS", targetColumn="CUSTOMER_ID")
+```
 
 ### Profile Management Tools
 

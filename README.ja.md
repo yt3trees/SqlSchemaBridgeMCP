@@ -14,7 +14,7 @@ graph TB
 
     subgraph "利用可能なMCPツール"
         QueryTools["🔍 スキーマクエリ<br/>(find_table, find_column, find_relations)"]
-        EditTools["✏️ スキーマ編集<br/>(add_table, add_column, add_relation)"]
+        EditTools["✏️ スキーマ編集<br/>(manage_schema)"]
     end
 
     %% メインフロー
@@ -260,7 +260,7 @@ dotnet publish -c Release -r osx-x64 --self-contained true
 
 ## 利用可能なツール
 
-サーバーは、AIエージェント向けの包括的な18のツールセットを公開しており、スキーマクエリ、スキーマ編集、プロファイル管理、プロファイル検証の4つの主要なカテゴリに分かれています。
+サーバーは、AIエージェント向けの包括的な13のツールセットを公開しており、スキーマクエリ、スキーマ編集、プロファイル管理、プロファイル検証の4つの主要なカテゴリに分かれています。
 
 ### スキーマクエリツール
 
@@ -306,57 +306,54 @@ dotnet publish -c Release -r osx-x64 --self-contained true
 
 これらのツールにより、エージェントは基になるCSVファイルを編集してスキーマを変更できます。
 
-#### `add_table`
--   **説明**: `tables.csv`に新しいテーブル定義を追加します。
+#### `manage_schema`
+-   **説明**: スキーマ要素(テーブル、列、リレーション)の追加/削除操作を管理します。
 -   **引数**:
-    -   `logicalName: str`: テーブルの論理名 (例: "Customers")。
-    -   `physicalName: str`: テーブルの物理名 (例: "M_CUSTOMERS")。
-    -   `primaryKey: str`: テーブルの主キー (例: "CUSTOMER_ID")。
-    -   `description: str`: テーブルの説明。
-    -   `databaseName: str` (任意): データベースの物理名。
-    -   `schemaName: str` (任意): スキーマの物理名。
+    -   `operation: str`: 実行する操作: 'add' または 'delete'。
+    -   `elementType: str`: 要素のタイプ: 'table'、'column'、または 'relation'。
+    -   `logicalName: str` (任意): 論理名(テーブル/列用)。
+    -   `physicalName: str` (任意): 物理名(テーブル/列用)または列のテーブル物理名。
+    -   `primaryKeyOrDataType: str` (任意): 主キー(テーブル用)またはデータ型(列用)。
+    -   `description: str` (任意): 要素の説明。
+    -   `databaseName: str` (任意): データベース名(テーブル用)。
+    -   `schemaName: str` (任意): スキーマ名(テーブル用)。
+    -   `tablePhysicalNameOrSourceTable: str` (任意): テーブル物理名(列用)またはソーステーブル(リレーション用)。
+    -   `sourceColumn: str` (任意): ソース列(リレーション用)。
+    -   `targetTable: str` (任意): ターゲットテーブル(リレーション用)。
+    -   `targetColumn: str` (任意): ターゲット列(リレーション用)。
 -   **戻り値**: 成功メッセージ。
 
-#### `delete_table`
--   **説明**: `tables.csv`からテーブル定義を削除します。
--   **引数**:
-    -   `physicalName: str`: 削除するテーブルの物理名。
--   **戻り値**: 成功メッセージ。
+**使用例:**
 
-#### `add_column`
--   **説明**: `columns.csv`に新しい列定義を追加します。
--   **引数**:
-    -   `tablePhysicalName: str`: この列が属するテーブルの物理名。
-    -   `logicalName: str`: 列の論理名。
-    -   `physicalName: str`: 列の物理名。
-    -   `dataType: str`: 列のデータ型。
-    -   `description: str` (任意): 列の説明。
--   **戻り値**: 成功メッセージ。
+**テーブルの追加:**
+```
+manage_schema(operation="add", elementType="table", logicalName="Customers", physicalName="M_CUSTOMERS", primaryKeyOrDataType="CUSTOMER_ID", description="顧客マスターテーブル")
+```
 
-#### `delete_column`
--   **説明**: `columns.csv`から列定義を削除します。
--   **引数**:
-    -   `tablePhysicalName: str`: 列が属するテーブルの物理名。
-    -   `physicalName: str`: 削除する列の物理名。
--   **戻り値**: 成功メッセージ。
+**テーブルの削除:**
+```
+manage_schema(operation="delete", elementType="table", physicalName="M_CUSTOMERS")
+```
 
-#### `add_relation`
--   **説明**: `relations.csv`に新しいリレーションシップ定義を追加します。
--   **引数**:
-    -   `sourceTable: str`: ソーステーブルの物理名。
-    -   `sourceColumn: str`: ソース列の物理名。
-    -   `targetTable: str`: ターゲットテーブルの物理名。
-    -   `targetColumn: str`: ターゲット列の物理名。
--   **戻り値**: 成功メッセージ。
+**列の追加:**
+```
+manage_schema(operation="add", elementType="column", tablePhysicalNameOrSourceTable="M_CUSTOMERS", logicalName="Customer Name", physicalName="CUSTOMER_NAME", primaryKeyOrDataType="nvarchar(100)", description="顧客名")
+```
 
-#### `delete_relation`
--   **説明**: `relations.csv`からリレーションシップ定義を削除します。
--   **引数**:
-    -   `sourceTable: str`: ソーステーブルの物理名。
-    -   `sourceColumn: str`: ソース列の物理名。
-    -   `targetTable: str`: ターゲットテーブルの物理名。
-    -   `targetColumn: str`: ターゲット列の物理名。
--   **戻り値**: 成功メッセージ。
+**列の削除:**
+```
+manage_schema(operation="delete", elementType="column", tablePhysicalNameOrSourceTable="M_CUSTOMERS", physicalName="CUSTOMER_NAME")
+```
+
+**リレーションの追加:**
+```
+manage_schema(operation="add", elementType="relation", tablePhysicalNameOrSourceTable="M_CUSTOMERS", sourceColumn="CUSTOMER_ID", targetTable="T_ORDER_HEADERS", targetColumn="CUSTOMER_ID")
+```
+
+**リレーションの削除:**
+```
+manage_schema(operation="delete", elementType="relation", tablePhysicalNameOrSourceTable="M_CUSTOMERS", sourceColumn="CUSTOMER_ID", targetTable="T_ORDER_HEADERS", targetColumn="CUSTOMER_ID")
+```
 
 ### プロファイル管理ツール
 
