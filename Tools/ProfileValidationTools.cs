@@ -17,7 +17,7 @@ public class ProfileValidationTools
 
     [McpServerTool]
     [Description("Validates CSV file settings for the specified profile")]
-    public async Task<object> ValidateProfile(
+    public async Task<object> SqlSchemaValidateProfile(
         [Description("Profile name to validate. If omitted, validates the current profile")] 
         string? profileName = null)
     {
@@ -51,7 +51,7 @@ public class ProfileValidationTools
 
     [McpServerTool]
     [Description("Gets a list of available profiles")]
-    public Task<object> ListAvailableProfiles()
+    public Task<object> SqlSchemaListAvailableProfiles()
     {
         try
         {
@@ -109,7 +109,7 @@ public class ProfileValidationTools
 
     [McpServerTool]
     [Description("Validates all available profiles")]
-    public async Task<object> ValidateAllProfiles()
+    public async Task<object> SqlSchemaValidateAllProfiles()
     {
         try
         {

@@ -27,7 +27,7 @@ internal class SqlSchemaBridgeTools
 
     [McpServerTool]
     [Description("Gets the instructions for the AI, if a README.md file is present in the current profile's directory. This tool must be executed first when using this MCP server.")]
-    public string GetProfileInstructions()
+    public string SqlSchemaGetProfileInstructions()
     {
         if (!string.IsNullOrWhiteSpace(_profileManager.CurrentProfileReadme))
         {
@@ -41,7 +41,7 @@ internal class SqlSchemaBridgeTools
 
     [McpServerTool]
     [Description("Searches for tables by logical or physical name and returns all matches in CSV format.")]
-    public string FindTable(
+    public string SqlSchemaFindTable(
         [Description("The logical name of the table (e.g., 'Customers')")] string? logicalName = null,
         [Description("The physical name of the table (e.g., 'M_CUSTOMERS')")] string? physicalName = null,
         [Description("The physical name of the database to search within.")] string? databaseName = null,
@@ -98,7 +98,7 @@ internal class SqlSchemaBridgeTools
 
     [McpServerTool]
     [Description("Searches for columns by logical or physical name and returns results in CSV format. The search can be filtered by providing a table_name. If only a table_name is provided, all columns for that table are returned. Recommendation: When filtering by table name, use exactMatch=true first for more precise results. Note: If the result is too large and causes token limit issues, try using exactMatch=true to get more specific results.")]
-    public string FindColumn(
+    public string SqlSchemaFindColumn(
         [Description("The logical name of the column (e.g., 'Customer Name')")] string? logicalName = null,
         [Description("The physical name of the column (e.g., 'CUSTOMER_NAME')")] string? physicalName = null,
         [Description("The physical name of the table to search within (e.g., 'M_CUSTOMERS')")] string? tableName = null,
@@ -154,7 +154,7 @@ internal class SqlSchemaBridgeTools
 
     [McpServerTool]
     [Description("Finds relationships and join conditions for a specified table and returns results in CSV format.")]
-    public string FindRelations(
+    public string SqlSchemaFindRelations(
         [Description("The physical name of the table (e.g., 'M_CUSTOMERS')")] string tableName,
         [Description("Specifies whether to perform an exact match (case-insensitive). Defaults to false (contains).")] bool exactMatch = false)
     {
@@ -184,7 +184,7 @@ internal class SqlSchemaBridgeTools
 
     [McpServerTool]
     [Description("Lists all available tables in CSV format.")]
-    public string ListTables()
+    public string SqlSchemaListTables()
     {
         _logger.LogInformation("Returning all tables.");
         return _csvConverter.ConvertTablesToCsv(_schemaProvider.Tables);

@@ -13,8 +13,8 @@ graph TB
     CSVFiles["📄 CSVファイル<br/>(tables.csv, columns.csv, relations.csv)"]
 
     subgraph "利用可能なMCPツール"
-        QueryTools["🔍 スキーマクエリ<br/>(find_table, find_column, find_relations)"]
-        EditTools["✏️ スキーマ編集<br/>(manage_schema)"]
+        QueryTools["🔍 スキーマクエリ<br/>(sql_schema_find_table, sql_schema_find_column, sql_schema_find_relations)"]
+        EditTools["✏️ スキーマ編集<br/>(sql_schema_manage_schema)"]
     end
 
     %% メインフロー
@@ -44,15 +44,15 @@ sequenceDiagram
     User->>Agent: "顧客ごとの最新注文日を教えて"
 
     Agent->>MCPServer: スキーマ情報を問い合わせる (テーブル、列、リレーションなど)
-    note right of Agent: find_table, find_column等のツールを使用
+    note right of Agent: sql_schema_find_table, sql_schema_find_column等のツールを使用
 
     MCPServer-->>Agent: スキーマのメタデータを返す
 
     Agent->>User: SQLクエリを生成して返す
 ```
 
-1.  エージェントは`find_table`や`find_column`のようなツールを呼び出して、論理名(「顧客」、「注文日」)をデータベース内の物理的な対応物(`Customers`、`OrderDate`)にマッピングします。
-2.  エージェントは`find_relations`を使用して、テーブルがどのように接続されているか(例：`Customers.CustomerID` -> `Orders.CustomerID`)を発見します。
+1.  エージェントは`sql_schema_find_table`や`sql_schema_find_column`のようなツールを呼び出して、論理名(「顧客」、「注文日」)をデータベース内の物理的な対応物(`Customers`、`OrderDate`)にマッピングします。
+2.  エージェントは`sql_schema_find_relations`を使用して、テーブルがどのように接続されているか(例：`Customers.CustomerID` -> `Orders.CustomerID`)を発見します。
 3.  取得したメタデータを使用して、エージェントはユーザーの質問に答えるための正確なSQLクエリを組み立てます。
 
 ## 特徴
@@ -191,20 +191,20 @@ M_PRODUCTS,PRODUCT_ID,T_ORDER_DETAILS,PRODUCT_ID
 
 **設定のポイント:**
 
--   **プロファイル設定不要**: サーバーは初回起動時に`default`プロファイルを使用し、`switch_profile`ツールで動的に切り替えできます。
+-   **プロファイル設定不要**: サーバーは初回起動時に`default`プロファイルを使用し、`sql_schema_switch_profile`ツールで動的に切り替えできます。
 
 ### 4. プロファイルの管理
 
 #### 初回起動
 - サーバーは自動的に`default`プロファイルを使用します
-- プロファイルが存在しない場合でも、利用可能なプロファイルを`list_available_profiles`ツールで確認できます
+- プロファイルが存在しない場合でも、利用可能なプロファイルを`sql_schema_list_available_profiles`ツールで確認できます
 
 #### プロファイルの切り替え
 AIまたはユーザーは以下のツールを使用してプロファイルを管理できます：
 
-- **`switch_profile(profile_name)`**: 指定されたプロファイルに切り替え
-- **`get_current_profile()`**: 現在使用中のプロファイル情報を取得
-- **`list_available_profiles()`**: 利用可能なプロファイル一覧を表示
+- **`sql_schema_switch_profile(profile_name)`**: 指定されたプロファイルに切り替え
+- **`sql_schema_get_current_profile()`**: 現在使用中のプロファイル情報を取得
+- **`sql_schema_list_available_profiles()`**: 利用可能なプロファイル一覧を表示
 
 #### 永続化
 - プロファイル切り替えは設定ファイル(`.current_profile`)に保存されます
@@ -236,7 +236,7 @@ AIまたはユーザーは以下のツールを使用してプロファイルを
 ```
 
 **開発時のプロファイル管理:**
-- 開発時もプロファイル切り替えは`switch_profile`ツールを使用
+- 開発時もプロファイル切り替えは`sql_schema_switch_profile`ツールを使用
 - 設定ファイルによる永続化により、開発セッション間でプロファイルが保持されます
 
 ### リリースビルドの作成(自己完結型)
@@ -266,17 +266,17 @@ dotnet publish -c Release -r osx-x64 --self-contained true
 
 これらのツールにより、エージェントはデータベーススキーマを検査でき、結果はCSV形式で返されます。
 
-#### `get_profile_instructions`
+#### `sql_schema_get_profile_instructions`
 -   **説明**: 現在のプロファイルのディレクトリに`README.md`ファイルが存在する場合、AI向けの指示を取得します。**このMCPサーバーを使用する際は、このツールを最初に実行する必要があります。**
 -   **引数**: なし。
 -   **戻り値**: プロファイル固有の指示を含む文字列。指示が見つからない場合はデフォルトのメッセージ。
 
-#### `list_tables`
+#### `sql_schema_list_tables`
 -   **説明**: 利用可能なすべてのテーブルをCSV形式で一覧表示します。
 -   **引数**: なし。
 -   **戻り値**: 全テーブルのCSV形式データ。
 
-#### `find_table`
+#### `sql_schema_find_table`
 -   **説明**: 論理名または物理名でテーブルを検索し、すべての一致をCSV形式で返します。
 -   **引数**:
     -   `logicalName: str` (任意): テーブルの論理名 (例: "Customers")。
@@ -286,7 +286,7 @@ dotnet publish -c Release -r osx-x64 --self-contained true
     -   `exactMatch: bool` (任意): `true`の場合、大文字と小文字を区別しない完全一致を実行します。デフォルトは`false` (部分一致)。
 -   **戻り値**: CSV形式のテーブルデータ。
 
-#### `find_column`
+#### `sql_schema_find_column`
 -   **説明**: 論理名または物理名で列を検索し、結果をCSV形式で返します。検索はtable_nameで絞り込むことができます。table_nameのみが指定された場合、そのテーブルのすべての列が返されます。**推奨**: テーブル名でフィルターをかける際は、まずexactMatch=trueを使用してより正確な結果を取得することをお勧めします。**注意**: 結果が大きすぎてトークン制限の問題を引き起こす場合は、exactMatch=trueを使用してより具体的な結果を取得してください。
 -   **引数**:
     -   `logicalName: str` (任意): 列の論理名 (例: "Customer Name")。
@@ -295,7 +295,7 @@ dotnet publish -c Release -r osx-x64 --self-contained true
     -   `exactMatch: bool` (任意): `true`の場合、大文字と小文字を区別しない完全一致を実行します。デフォルトは`false` (部分一致)。
 -   **戻り値**: CSV形式の列データ(最大1000件)。
 
-#### `find_relations`
+#### `sql_schema_find_relations`
 -   **説明**: 指定されたテーブルのリレーションシップと結合条件を検索し、結果をCSV形式で返します。
 -   **引数**:
     -   `tableName: str`: テーブルの物理名 (例: "M_CUSTOMERS")。
@@ -306,7 +306,7 @@ dotnet publish -c Release -r osx-x64 --self-contained true
 
 これらのツールにより、エージェントは基になるCSVファイルを編集してスキーマを変更できます。
 
-#### `manage_schema`
+#### `sql_schema_manage_schema`
 -   **説明**: スキーマ要素(テーブル、列、リレーション)の追加/削除操作を管理します。
 -   **引数**:
     -   `operation: str`: 実行する操作: 'add' または 'delete'。
@@ -327,55 +327,55 @@ dotnet publish -c Release -r osx-x64 --self-contained true
 
 **テーブルの追加:**
 ```
-manage_schema(operation="add", elementType="table", logicalName="Customers", physicalName="M_CUSTOMERS", primaryKeyOrDataType="CUSTOMER_ID", description="顧客マスターテーブル")
+sql_schema_manage_schema(operation="add", elementType="table", logicalName="Customers", physicalName="M_CUSTOMERS", primaryKeyOrDataType="CUSTOMER_ID", description="顧客マスターテーブル")
 ```
 
 **テーブルの削除:**
 ```
-manage_schema(operation="delete", elementType="table", physicalName="M_CUSTOMERS")
+sql_schema_manage_schema(operation="delete", elementType="table", physicalName="M_CUSTOMERS")
 ```
 
 **列の追加:**
 ```
-manage_schema(operation="add", elementType="column", tablePhysicalNameOrSourceTable="M_CUSTOMERS", logicalName="Customer Name", physicalName="CUSTOMER_NAME", primaryKeyOrDataType="nvarchar(100)", description="顧客名")
+sql_schema_manage_schema(operation="add", elementType="column", tablePhysicalNameOrSourceTable="M_CUSTOMERS", logicalName="Customer Name", physicalName="CUSTOMER_NAME", primaryKeyOrDataType="nvarchar(100)", description="顧客名")
 ```
 
 **列の削除:**
 ```
-manage_schema(operation="delete", elementType="column", tablePhysicalNameOrSourceTable="M_CUSTOMERS", physicalName="CUSTOMER_NAME")
+sql_schema_manage_schema(operation="delete", elementType="column", tablePhysicalNameOrSourceTable="M_CUSTOMERS", physicalName="CUSTOMER_NAME")
 ```
 
 **リレーションの追加:**
 ```
-manage_schema(operation="add", elementType="relation", tablePhysicalNameOrSourceTable="M_CUSTOMERS", sourceColumn="CUSTOMER_ID", targetTable="T_ORDER_HEADERS", targetColumn="CUSTOMER_ID")
+sql_schema_manage_schema(operation="add", elementType="relation", tablePhysicalNameOrSourceTable="M_CUSTOMERS", sourceColumn="CUSTOMER_ID", targetTable="T_ORDER_HEADERS", targetColumn="CUSTOMER_ID")
 ```
 
 **リレーションの削除:**
 ```
-manage_schema(operation="delete", elementType="relation", tablePhysicalNameOrSourceTable="M_CUSTOMERS", sourceColumn="CUSTOMER_ID", targetTable="T_ORDER_HEADERS", targetColumn="CUSTOMER_ID")
+sql_schema_manage_schema(operation="delete", elementType="relation", tablePhysicalNameOrSourceTable="M_CUSTOMERS", sourceColumn="CUSTOMER_ID", targetTable="T_ORDER_HEADERS", targetColumn="CUSTOMER_ID")
 ```
 
 ### プロファイル管理ツール
 
 これらのツールにより、AIまたはユーザーはプロファイルを動的に切り替えて管理できます。
 
-#### `switch_profile`
+#### `sql_schema_switch_profile`
 -   **説明**: 異なるプロファイルに切り替えて、スキーマデータを再読み込みします。
 -   **引数**:
     -   `profileName: str`: 切り替え先のプロファイル名。
 -   **戻り値**: 成功状況、プロファイル情報、スキーマ件数を含むJSONオブジェクト。
 
-#### `get_current_profile`
+#### `sql_schema_get_current_profile`
 -   **説明**: 現在のプロファイル情報を取得します。
 -   **引数**: なし。
 -   **戻り値**: 現在のプロファイル情報とスキーマ件数を含むJSONオブジェクト。
 
-#### `reload_schema`
+#### `sql_schema_reload_schema`
 -   **説明**: 現在のプロファイルからスキーマデータを再読み込みします。
 -   **引数**: なし。
 -   **戻り値**: 再読み込み状況と前後のスキーマ件数を含むJSONオブジェクト。
 
-#### `create_profile`
+#### `sql_schema_create_profile`
 -   **説明**: 新しいプロファイルディレクトリを作成し、オプションで初期スキーマファイルを作成します。
 -   **引数**:
     -   `profileName: str`: 作成するプロファイル名。
@@ -383,7 +383,7 @@ manage_schema(operation="delete", elementType="relation", tablePhysicalNameOrSou
     -   `createSampleFiles: bool` (任意): サンプルCSVファイルを作成するかどうか。デフォルトは`false`。
 -   **戻り値**: 作成状況と作成されたファイル一覧を含むJSONオブジェクト。
 
-#### `generate_csv`
+#### `sql_schema_generate_csv`
 -   **説明**: 指定されたタイプに基づいてスキーマデータのCSVファイルを生成します。
 -   **引数**:
     -   `csvType: str`: 生成するCSVのタイプ: 'tables'、'columns'、'relations'、または'all'。
@@ -394,18 +394,18 @@ manage_schema(operation="delete", elementType="relation", tablePhysicalNameOrSou
 
 これらのツールにより、プロファイルのCSVファイル設定を検証し、データの整合性を確保できます。
 
-#### `validate_profile`
+#### `sql_schema_validate_profile`
 -   **説明**: 指定されたプロファイルのCSVファイル設定を検証します。
 -   **引数**:
     -   `profileName: str` (任意): 検証するプロファイル名。省略時は現在のプロファイルを検証。
 -   **戻り値**: 検証結果、エラー、警告、詳細レポートを含むJSONオブジェクト。
 
-#### `list_available_profiles`
+#### `sql_schema_list_available_profiles`
 -   **説明**: 利用可能なプロファイル一覧を取得します。
 -   **引数**: なし。
 -   **戻り値**: 利用可能なプロファイル一覧とその完全性状況を含むJSONオブジェクト。
 
-#### `validate_all_profiles`
+#### `sql_schema_validate_all_profiles`
 -   **説明**: 利用可能なすべてのプロファイルを検証します。
 -   **引数**: なし。
 -   **戻り値**: 全プロファイルの検証サマリーを含むJSONオブジェクト。

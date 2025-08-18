@@ -19,7 +19,7 @@ public class ProfileManagementTools
 
     [McpServerTool]
     [Description("Switches to a different profile and reloads schema data")]
-    public async Task<object> SwitchProfile(
+    public async Task<object> SqlSchemaSwitchProfile(
         [Description("Name of the profile to switch to")]
         string profileName)
     {
@@ -86,7 +86,7 @@ public class ProfileManagementTools
 
     [McpServerTool]
     [Description("Gets information about the current profile")]
-    public Task<object> GetCurrentProfile()
+    public Task<object> SqlSchemaGetCurrentProfile()
     {
         try
         {
@@ -115,7 +115,7 @@ public class ProfileManagementTools
 
     [McpServerTool]
     [Description("Reloads schema data from the current profile")]
-    public Task<object> ReloadSchema()
+    public Task<object> SqlSchemaReloadSchema()
     {
         try
         {
@@ -154,7 +154,7 @@ public class ProfileManagementTools
 
     [McpServerTool]
     [Description("Creates a new profile directory with optional initial schema files")]
-    public async Task<object> CreateProfile(
+    public async Task<object> SqlSchemaCreateProfile(
         [Description("Name of the profile to create")]
         string profileName,
         [Description("Optional description for the profile")]
@@ -234,7 +234,7 @@ public class ProfileManagementTools
 
     [McpServerTool]
     [Description("Generates CSV files for schema data based on specified types")]
-    public async Task<object> GenerateCSV(
+    public async Task<object> SqlSchemaGenerateCSV(
         [Description("Type of CSV to generate: 'tables', 'columns', 'relations', or 'all'")]
         string csvType,
         [Description("Output directory path (optional, defaults to current profile directory)")]

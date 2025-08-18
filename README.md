@@ -13,8 +13,8 @@ graph TB
     CSVFiles["📄 CSV Files<br/>(tables.csv, columns.csv, relations.csv)"]
 
     subgraph "Available MCP Tools"
-        QueryTools["🔍 Schema Querying<br/>(find_table, find_column, find_relations)"]
-        EditTools["✏️ Schema Editing<br/>(manage_schema)"]
+        QueryTools["🔍 Schema Querying<br/>(sql_schema_find_table, sql_schema_find_column, sql_schema_find_relations)"]
+        EditTools["✏️ Schema Editing<br/>(sql_schema_manage_schema)"]
     end
 
     %% Main Flow
@@ -44,15 +44,15 @@ sequenceDiagram
     User->>Agent: "Show me the latest order date for each customer"
 
     Agent->>MCPServer: Inquire about schema (e.g., tables, columns, relations)
-    note right of Agent: Uses tools like find_table, find_column, etc.
+    note right of Agent: Uses tools like sql_schema_find_table, sql_schema_find_column, etc.
 
     MCPServer-->>Agent: Return schema metadata
 
     Agent->>User: Generate and return SQL query
 ```
 
-1.  The agent calls tools like `find_table` and `find_column` to map logical names ("customer", "order date") to their physical counterparts in the database (`Customers`, `OrderDate`).
-2.  The agent uses `find_relations` to discover how tables are connected (e.g., `Customers.CustomerID` -> `Orders.CustomerID`).
+1.  The agent calls tools like `sql_schema_find_table` and `sql_schema_find_column` to map logical names ("customer", "order date") to their physical counterparts in the database (`Customers`, `OrderDate`).
+2.  The agent uses `sql_schema_find_relations` to discover how tables are connected (e.g., `Customers.CustomerID` -> `Orders.CustomerID`).
 3.  Using the retrieved metadata, the agent assembles a precise SQL query to answer the user's question.
 
 ## Features
@@ -203,9 +203,9 @@ M_PRODUCTS,PRODUCT_ID,T_ORDER_DETAILS,PRODUCT_ID
 #### Profile Switching
 AI or users can manage profiles using the following tools:
 
-- **`switch_profile(profile_name)`**: Switch to the specified profile
-- **`get_current_profile()`**: Get information about the currently active profile
-- **`list_available_profiles()`**: List all available profiles
+- **`sql_schema_switch_profile(profile_name)`**: Switch to the specified profile
+- **`sql_schema_get_current_profile()`**: Get information about the currently active profile
+- **`sql_schema_list_available_profiles()`**: List all available profiles
 
 #### Persistence
 - Profile switches are saved to a settings file (`.current_profile`)
@@ -267,17 +267,17 @@ The server exposes a comprehensive set of 13 tools for the AI agent, divided int
 
 These tools allow the agent to inspect the database schema and return results in CSV format.
 
-#### `get_profile_instructions`
+#### `sql_schema_get_profile_instructions`
 -   **Description**: Gets the instructions for the AI, if a `README.md` file is present in the current profile's directory. **This tool must be executed first when using this MCP server.**
 -   **Arguments**: None.
 -   **Returns**: String containing profile-specific instructions, or a default message if no instructions are found.
 
-#### `list_tables`
+#### `sql_schema_list_tables`
 -   **Description**: Lists all available tables in CSV format.
 -   **Arguments**: None.
 -   **Returns**: CSV format of all tables.
 
-#### `find_table`
+#### `sql_schema_find_table`
 -   **Description**: Searches for tables by logical or physical name and returns all matches in CSV format.
 -   **Arguments**:
     -   `logicalName: str` (optional): The logical name of the table (e.g., "Customers").
@@ -287,7 +287,7 @@ These tools allow the agent to inspect the database schema and return results in
     -   `exactMatch: bool` (optional): If true, performs a case-insensitive exact match. Defaults to `false` (contains).
 -   **Returns**: CSV format table data.
 
-#### `find_column`
+#### `sql_schema_find_column`
 -   **Description**: Searches for columns by logical or physical name and returns results in CSV format. The search can be filtered by providing a table_name. If only a table_name is provided, all columns for that table are returned. **Recommendation**: When filtering by table name, use exactMatch=true first for more precise results. **Note**: If the result is too large and causes token limit issues, try using exactMatch=true to get more specific results.
 -   **Arguments**:
     -   `logicalName: str` (optional): The logical name of the column (e.g., "Customer Name").
@@ -296,7 +296,7 @@ These tools allow the agent to inspect the database schema and return results in
     -   `exactMatch: bool` (optional): If true, performs a case-insensitive exact match. Defaults to `false` (contains).
 -   **Returns**: CSV format column data (max 1000 results).
 
-#### `find_relations`
+#### `sql_schema_find_relations`
 -   **Description**: Finds relationships and join conditions for a specified table and returns results in CSV format.
 -   **Arguments**:
     -   `tableName: str`: The physical name of the table (e.g., "M_CUSTOMERS").
@@ -307,7 +307,7 @@ These tools allow the agent to inspect the database schema and return results in
 
 These tools allow the agent to modify the schema by editing the underlying CSV files.
 
-#### `manage_schema`
+#### `sql_schema_manage_schema`
 -   **Description**: Manages schema elements (tables, columns, relations) with add/delete operations.
 -   **Arguments**:
     -   `operation: str`: The operation to perform: 'add' or 'delete'.
@@ -328,55 +328,55 @@ These tools allow the agent to modify the schema by editing the underlying CSV f
 
 **Add Table:**
 ```
-manage_schema(operation="add", elementType="table", logicalName="Customers", physicalName="M_CUSTOMERS", primaryKeyOrDataType="CUSTOMER_ID", description="Customer master table")
+sql_schema_manage_schema(operation="add", elementType="table", logicalName="Customers", physicalName="M_CUSTOMERS", primaryKeyOrDataType="CUSTOMER_ID", description="Customer master table")
 ```
 
 **Delete Table:**
 ```
-manage_schema(operation="delete", elementType="table", physicalName="M_CUSTOMERS")
+sql_schema_manage_schema(operation="delete", elementType="table", physicalName="M_CUSTOMERS")
 ```
 
 **Add Column:**
 ```
-manage_schema(operation="add", elementType="column", tablePhysicalNameOrSourceTable="M_CUSTOMERS", logicalName="Customer Name", physicalName="CUSTOMER_NAME", primaryKeyOrDataType="nvarchar(100)", description="Name of the customer")
+sql_schema_manage_schema(operation="add", elementType="column", tablePhysicalNameOrSourceTable="M_CUSTOMERS", logicalName="Customer Name", physicalName="CUSTOMER_NAME", primaryKeyOrDataType="nvarchar(100)", description="Name of the customer")
 ```
 
 **Delete Column:**
 ```
-manage_schema(operation="delete", elementType="column", tablePhysicalNameOrSourceTable="M_CUSTOMERS", physicalName="CUSTOMER_NAME")
+sql_schema_manage_schema(operation="delete", elementType="column", tablePhysicalNameOrSourceTable="M_CUSTOMERS", physicalName="CUSTOMER_NAME")
 ```
 
 **Add Relation:**
 ```
-manage_schema(operation="add", elementType="relation", tablePhysicalNameOrSourceTable="M_CUSTOMERS", sourceColumn="CUSTOMER_ID", targetTable="T_ORDER_HEADERS", targetColumn="CUSTOMER_ID")
+sql_schema_manage_schema(operation="add", elementType="relation", tablePhysicalNameOrSourceTable="M_CUSTOMERS", sourceColumn="CUSTOMER_ID", targetTable="T_ORDER_HEADERS", targetColumn="CUSTOMER_ID")
 ```
 
 **Delete Relation:**
 ```
-manage_schema(operation="delete", elementType="relation", tablePhysicalNameOrSourceTable="M_CUSTOMERS", sourceColumn="CUSTOMER_ID", targetTable="T_ORDER_HEADERS", targetColumn="CUSTOMER_ID")
+sql_schema_manage_schema(operation="delete", elementType="relation", tablePhysicalNameOrSourceTable="M_CUSTOMERS", sourceColumn="CUSTOMER_ID", targetTable="T_ORDER_HEADERS", targetColumn="CUSTOMER_ID")
 ```
 
 ### Profile Management Tools
 
 These tools allow AI or users to dynamically switch and manage profiles.
 
-#### `switch_profile`
+#### `sql_schema_switch_profile`
 -   **Description**: Switches to a different profile and reloads schema data.
 -   **Arguments**:
     -   `profileName: str`: Name of the profile to switch to.
 -   **Returns**: JSON object with success status, profile information, and schema counts.
 
-#### `get_current_profile`
+#### `sql_schema_get_current_profile`
 -   **Description**: Gets information about the current profile.
 -   **Arguments**: None.
 -   **Returns**: JSON object with current profile information and schema counts.
 
-#### `reload_schema`
+#### `sql_schema_reload_schema`
 -   **Description**: Reloads schema data from the current profile.
 -   **Arguments**: None.
 -   **Returns**: JSON object with reload status and before/after schema counts.
 
-#### `create_profile`
+#### `sql_schema_create_profile`
 -   **Description**: Creates a new profile directory with optional initial schema files.
 -   **Arguments**:
     -   `profileName: str`: Name of the profile to create.
@@ -384,7 +384,7 @@ These tools allow AI or users to dynamically switch and manage profiles.
     -   `createSampleFiles: bool` (optional): Whether to create sample CSV files. Defaults to `false`.
 -   **Returns**: JSON object with creation status and created files list.
 
-#### `generate_csv`
+#### `sql_schema_generate_csv`
 -   **Description**: Generates CSV files for schema data based on specified types.
 -   **Arguments**:
     -   `csvType: str`: Type of CSV to generate: 'tables', 'columns', 'relations', or 'all'.
@@ -395,18 +395,18 @@ These tools allow AI or users to dynamically switch and manage profiles.
 
 These tools allow validation of profile CSV file settings and ensure data integrity.
 
-#### `validate_profile`
+#### `sql_schema_validate_profile`
 -   **Description**: Validates CSV file settings for the specified profile.
 -   **Arguments**:
     -   `profileName: str` (optional): Profile name to validate. If omitted, validates the current profile.
 -   **Returns**: JSON object with validation results, errors, warnings, and detailed report.
 
-#### `list_available_profiles`
+#### `sql_schema_list_available_profiles`
 -   **Description**: Gets a list of available profiles.
 -   **Arguments**: None.
 -   **Returns**: JSON object with list of available profiles and their completeness status.
 
-#### `validate_all_profiles`
+#### `sql_schema_validate_all_profiles`
 -   **Description**: Validates all available profiles.
 -   **Arguments**: None.
 -   **Returns**: JSON object with validation summary for all profiles.

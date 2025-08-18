@@ -49,7 +49,7 @@ public class ProfileManager
         // Validate current profile exists
         if (!Directory.Exists(CurrentProfilePath))
         {
-            _logger.LogWarning("Current profile directory not found at: {ProfilePath}. Available profiles can be listed using list_available_profiles tool.", CurrentProfilePath);
+            _logger.LogWarning("Current profile directory not found at: {ProfilePath}. Available profiles can be listed using sql_schema_list_available_profiles tool.", CurrentProfilePath);
         }
 
         LoadProfileReadme();

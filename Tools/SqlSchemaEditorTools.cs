@@ -22,7 +22,7 @@ internal class SqlSchemaEditorTools
 
     [McpServerTool]
     [Description("Manages schema elements (tables, columns, relations) with add/delete operations.")]
-    public string ManageSchema(
+    public string SqlSchemaManageSchema(
         [Description("The operation to perform: 'add' or 'delete'.")] string operation,
         [Description("The type of element: 'table', 'column', or 'relation'.")] string elementType,
         [Description("The logical name (for tables/columns).")] string? logicalName = null,
