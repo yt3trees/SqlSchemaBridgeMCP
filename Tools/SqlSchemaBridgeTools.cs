@@ -97,7 +97,7 @@ internal class SqlSchemaBridgeTools
     }
 
     [McpServerTool]
-    [Description("Searches for columns by logical or physical name and returns results in CSV format. The search can be filtered by providing a table_name. If only a table_name is provided, all columns for that table are returned. Recommendation: When filtering by table name, use exactMatch=true first for more precise results. Note: If the result is too large and causes token limit issues, try using exactMatch=true to get more specific results.")]
+    [Description("Searches for columns by logical or physical name and returns results in CSV format. Can be filtered by table_name.")]
     public string SqlSchemaFindColumn(
         [Description("The logical name of the column (e.g., 'Customer Name')")] string? logicalName = null,
         [Description("The physical name of the column (e.g., 'CUSTOMER_NAME')")] string? physicalName = null,
@@ -142,11 +142,16 @@ internal class SqlSchemaBridgeTools
             return "table_physical_name,logical_name,physical_name,data_type,description";
         }
 
-        const int maxResultCount = 1000;
+        const int maxResultCount = 500;
         if (results.Count > maxResultCount)
         {
-            _logger.LogWarning("Too many results found: {Count}. Maximum allowed: {MaxCount}", results.Count, maxResultCount);
-            throw new InvalidOperationException($"Too many results found ({results.Count} items). Maximum allowed is {maxResultCount} items. Please specify a table name to narrow down the search or set exactMatch=true.");
+            var totalCount = results.Count;
+            _logger.LogWarning("Too many results found: {Count}. Returning first {MaxCount} results", results.Count, maxResultCount);
+            results = results.Take(maxResultCount).ToList();
+
+            var csvData = _csvConverter.ConvertColumnsToCsv(results);
+            var errorMessage = $"WARNING: Too many results found ({totalCount}). Showing first {maxResultCount} results only. Try using exactMatch=true for more precise results.";
+            return $"{errorMessage}\n\n{csvData}";
         }
 
         return _csvConverter.ConvertColumnsToCsv(results);
