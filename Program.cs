@@ -28,7 +28,6 @@ builder.Services
     .WithTools<SqlSchemaEditorTools>()
     .WithTools<ProfileValidationTools>()
     .WithTools<ProfileManagementTools>()
-    .WithTools<SqlValidationTools>()
     .WithListResourcesHandler(SqlSchemaBridgeMCP.Resources.ResourceHandlers.HandleListResources)
     .WithReadResourceHandler(SqlSchemaBridgeMCP.Resources.ResourceHandlers.HandleReadResource);
 
