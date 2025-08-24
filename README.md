@@ -130,13 +130,19 @@ To use this MCP server with a client like the Gemini CLI, you need to configure 
 
 ### 3. Metadata Configuration
 
-The server loads schema information from CSV files located in a dedicated folder within your user's home directory.
+The server loads schema information from CSV files located in profile directories. The server searches for these profiles in two locations:
+1.  The path specified by the `SQLSCHEMABRIDGEMCP_PROFILES_PATH` environment variable (if set).
+2.  The default folder named `.SqlSchemaBridgeMCP` inside your user's home directory (e.g., `C:\Users\<UserName>` on Windows or `~/` on macOS/Linux).
 
 **Directory Structure:**
 
-The server uses a folder named `.SqlSchemaBridgeMCP` inside your user's home directory (e.g., `C:\Users\<UserName>` on Windows or `~/` on macOS/Linux) to manage profiles. This folder is created automatically on the first run.
+You can place profile folders (like `ProjectA`, `Test`) inside either of the locations mentioned above. The server will aggregate profiles from all search paths.
 
-Inside the `.SqlSchemaBridgeMCP` directory, create a subdirectory for each profile you want to use.
+If a profile with the same name exists in multiple locations, the one in the path specified by the environment variable will take priority.
+
+The `.current_profile` file, which stores the currently active profile, is always managed within the default `~/.SqlSchemaBridgeMCP` directory.
+
+Inside the profile root directories, create a subdirectory for each profile you want to use.
 
 ```
 \.SqlSchemaBridgeMCP

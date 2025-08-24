@@ -156,7 +156,7 @@ public class WebDebugService
         {
             try
             {
-                var profilePath = Path.Combine(_profileManager.GetBaseDirectory(), profileName);
+                var profilePath = _profileManager.GetProfileDirectory(profileName);
                 if (!Directory.Exists(profilePath))
                 {
                     context.Response.StatusCode = 404;
@@ -194,7 +194,7 @@ public class WebDebugService
         {
             try
             {
-                var profilePath = Path.Combine(_profileManager.GetBaseDirectory(), profileName);
+                var profilePath = _profileManager.GetProfileDirectory(profileName);
                 var filePath = Path.Combine(profilePath, fileName);
  if (!File.Exists(filePath) || !fileName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
                 {
