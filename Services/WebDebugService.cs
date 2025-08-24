@@ -8,6 +8,7 @@ using System.Text;
 using System.Text.Json;
 using System.Net.Sockets;
 using System.Net;
+using SqlSchemaBridgeMCP.Tools;
 
 namespace SqlSchemaBridgeMCP.Services;
 
@@ -15,14 +16,18 @@ public class WebDebugService
 {
     private readonly ILogger<WebDebugService> _logger;
     private readonly ProfileManager _profileManager;
+    private readonly SqlSchemaBridgeTools _schemaTools;
+    private readonly SqlSchemaEditorTools _editorTools;
     private WebApplication? _app;
     private int _port;
     private Task? _webServerTask;
 
-    public WebDebugService(ILogger<WebDebugService> logger, ProfileManager profileManager)
+    public WebDebugService(ILogger<WebDebugService> logger, ProfileManager profileManager, SqlSchemaBridgeTools schemaTools, SqlSchemaEditorTools editorTools)
     {
         _logger = logger;
         _profileManager = profileManager;
+        _schemaTools = schemaTools;
+        _editorTools = editorTools;
         _port = FindFirstFreePort(24300);
     }
 
@@ -241,6 +246,125 @@ public class WebDebugService
                 await context.Response.WriteAsync($"Error: {ex.Message}");
             }
         });
+
+        // Schema search tool test endpoints
+        _app.MapPost("/api/schema/findtable", async context =>
+        {
+            try
+            {
+                var body = await new StreamReader(context.Request.Body).ReadToEndAsync();
+                var request = JsonSerializer.Deserialize<Dictionary<string, object>>(body);
+                
+                var logicalName = request.TryGetValue("logicalName", out var ln) ? ln?.ToString() : null;
+                var physicalName = request.TryGetValue("physicalName", out var pn) ? pn?.ToString() : null;
+                var databaseName = request.TryGetValue("databaseName", out var dn) ? dn?.ToString() : null;
+                var schemaName = request.TryGetValue("schemaName", out var sn) ? sn?.ToString() : null;
+                var exactMatch = request.TryGetValue("exactMatch", out var em) && bool.Parse(em?.ToString() ?? "false");
+                var useRegex = request.TryGetValue("useRegex", out var ur) && bool.Parse(ur?.ToString() ?? "false");
+
+                var result = _schemaTools.SqlSchemaFindTable(logicalName, physicalName, databaseName, schemaName, exactMatch, useRegex);
+                
+                context.Response.ContentType = "text/plain; charset=utf-8";
+                await context.Response.WriteAsync(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in schema find table test");
+                context.Response.StatusCode = 500;
+                await context.Response.WriteAsync($"Error: {ex.Message}");
+            }
+        });
+
+        _app.MapPost("/api/schema/findcolumn", async context =>
+        {
+            try
+            {
+                var body = await new StreamReader(context.Request.Body).ReadToEndAsync();
+                var request = JsonSerializer.Deserialize<Dictionary<string, object>>(body);
+                
+                var logicalName = request.TryGetValue("logicalName", out var ln) ? ln?.ToString() : null;
+                var physicalName = request.TryGetValue("physicalName", out var pn) ? pn?.ToString() : null;
+                var tableName = request.TryGetValue("tableName", out var tn) ? tn?.ToString() : null;
+                var exactMatch = request.TryGetValue("exactMatch", out var em) && bool.Parse(em?.ToString() ?? "false");
+                var useRegex = request.TryGetValue("useRegex", out var ur) && bool.Parse(ur?.ToString() ?? "false");
+
+                var result = _schemaTools.SqlSchemaFindColumn(logicalName, physicalName, tableName, exactMatch, useRegex);
+                
+                context.Response.ContentType = "text/plain; charset=utf-8";
+                await context.Response.WriteAsync(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in schema find column test");
+                context.Response.StatusCode = 500;
+                await context.Response.WriteAsync($"Error: {ex.Message}");
+            }
+        });
+
+        _app.MapPost("/api/schema/findrelations", async context =>
+        {
+            try
+            {
+                var body = await new StreamReader(context.Request.Body).ReadToEndAsync();
+                var request = JsonSerializer.Deserialize<Dictionary<string, object>>(body);
+                
+                var tableName = request.TryGetValue("tableName", out var tn) ? tn?.ToString() : null;
+                var exactMatch = request.TryGetValue("exactMatch", out var em) && bool.Parse(em?.ToString() ?? "false");
+                var useRegex = request.TryGetValue("useRegex", out var ur) && bool.Parse(ur?.ToString() ?? "false");
+
+                if (string.IsNullOrEmpty(tableName))
+                {
+                    context.Response.StatusCode = 400;
+                    await context.Response.WriteAsync("tableName is required");
+                    return;
+                }
+
+                var result = _schemaTools.SqlSchemaFindRelations(tableName, exactMatch, useRegex);
+                
+                context.Response.ContentType = "text/plain; charset=utf-8";
+                await context.Response.WriteAsync(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in schema find relations test");
+                context.Response.StatusCode = 500;
+                await context.Response.WriteAsync($"Error: {ex.Message}");
+            }
+        });
+
+        _app.MapGet("/api/schema/listtables", async context =>
+        {
+            try
+            {
+                var result = _schemaTools.SqlSchemaListTables();
+                
+                context.Response.ContentType = "text/plain; charset=utf-8";
+                await context.Response.WriteAsync(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in schema list tables test");
+                context.Response.StatusCode = 500;
+                await context.Response.WriteAsync($"Error: {ex.Message}");
+            }
+        });
+
+        _app.MapGet("/api/schema/instructions", async context =>
+        {
+            try
+            {
+                var result = _schemaTools.SqlSchemaGetProfileInstructions();
+                
+                context.Response.ContentType = "text/plain; charset=utf-8";
+                await context.Response.WriteAsync(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in schema get instructions test");
+                context.Response.StatusCode = 500;
+                await context.Response.WriteAsync($"Error: {ex.Message}");
+            }
+        });
     }
 
     private string GenerateIndexHtml()
@@ -292,6 +416,7 @@ public class WebDebugService
         .csv-table { max-height: 400px; overflow: auto; border: 1px solid #ddd; margin: 10px 0; }
         .csv-table table { margin: 0; table-layout: auto; }
         .csv-table th { position: sticky; top: 0; background: #f8f9fa; z-index: 1; }
+        .tool-test { width: 1160px; }
     </style>
 </head>
 <body>
@@ -319,6 +444,62 @@ public class WebDebugService
                 <p>Browse and view CSV data files</p>
                 <div id="profile-select"></div>
                 <div id="files-content" class="loading">Select a profile to view files...</div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="card tool-test">
+                <h2>Schema Search Tools Test</h2>
+                <p>Test schema search functionality</p>
+                
+                <div style="margin: 10px 0;">
+                    <h3>Find Table</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0;">
+                        <input type="text" id="findTableLogical" placeholder="Logical Name">
+                        <input type="text" id="findTablePhysical" placeholder="Physical Name">
+                        <input type="text" id="findTableDatabase" placeholder="Database Name">
+                        <input type="text" id="findTableSchema" placeholder="Schema Name">
+                    </div>
+                    <div style="margin: 10px 0;">
+                        <label><input type="checkbox" id="findTableExact"> Exact Match</label>
+                        <label style="margin-left: 15px;"><input type="checkbox" id="findTableRegex"> Use Regex</label>
+                    </div>
+                    <button class="btn" onclick="testFindTable()">Test Find Table</button>
+                </div>
+
+                <div style="margin: 20px 0;">
+                    <h3>Find Column</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 10px 0;">
+                        <input type="text" id="findColumnLogical" placeholder="Logical Name">
+                        <input type="text" id="findColumnPhysical" placeholder="Physical Name">
+                        <input type="text" id="findColumnTable" placeholder="Table Name">
+                    </div>
+                    <div style="margin: 10px 0;">
+                        <label><input type="checkbox" id="findColumnExact"> Exact Match</label>
+                        <label style="margin-left: 15px;"><input type="checkbox" id="findColumnRegex"> Use Regex</label>
+                    </div>
+                    <button class="btn" onclick="testFindColumn()">Test Find Column</button>
+                </div>
+
+                <div style="margin: 20px 0;">
+                    <h3>Find Relations</h3>
+                    <div style="display: grid; grid-template-columns: 1fr; gap: 10px; margin: 10px 0;">
+                        <input type="text" id="findRelationsTable" placeholder="Table Name (required)">
+                    </div>
+                    <div style="margin: 10px 0;">
+                        <label><input type="checkbox" id="findRelationsExact"> Exact Match</label>
+                        <label style="margin-left: 15px;"><input type="checkbox" id="findRelationsRegex"> Use Regex</label>
+                    </div>
+                    <button class="btn" onclick="testFindRelations()">Test Find Relations</button>
+                </div>
+
+                <div style="margin: 20px 0;">
+                    <h3>Other Tools</h3>
+                    <button class="btn" onclick="testListTables()">Test List All Tables</button>
+                    <button class="btn" onclick="testGetInstructions()">Test Get Instructions</button>
+                </div>
+
+                <div id="schema-results" style="margin-top: 20px;"></div>
             </div>
         </div>
 
@@ -514,6 +695,180 @@ public class WebDebugService
             } else {
                 button.textContent = 'Auto Refresh';
                 button.style.background = '#007cba';
+            }
+        }
+
+        // Schema tool test functions
+        async function testFindTable() {
+            const resultsDiv = document.getElementById('schema-results');
+            resultsDiv.innerHTML = '<div class="loading">Testing Find Table...</div>';
+
+            const data = {
+                logicalName: document.getElementById('findTableLogical').value || null,
+                physicalName: document.getElementById('findTablePhysical').value || null,
+                databaseName: document.getElementById('findTableDatabase').value || null,
+                schemaName: document.getElementById('findTableSchema').value || null,
+                exactMatch: document.getElementById('findTableExact').checked,
+                useRegex: document.getElementById('findTableRegex').checked
+            };
+
+            try {
+                const response = await fetch('/api/schema/findtable', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+                }
+                
+                const result = await response.text();
+                displaySchemaResult('Find Table', result);
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="status" style="background: #f8d7da; color: #721c24;">Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testFindColumn() {
+            const resultsDiv = document.getElementById('schema-results');
+            resultsDiv.innerHTML = '<div class="loading">Testing Find Column...</div>';
+
+            const data = {
+                logicalName: document.getElementById('findColumnLogical').value || null,
+                physicalName: document.getElementById('findColumnPhysical').value || null,
+                tableName: document.getElementById('findColumnTable').value || null,
+                exactMatch: document.getElementById('findColumnExact').checked,
+                useRegex: document.getElementById('findColumnRegex').checked
+            };
+
+            try {
+                const response = await fetch('/api/schema/findcolumn', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+                }
+                
+                const result = await response.text();
+                displaySchemaResult('Find Column', result);
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="status" style="background: #f8d7da; color: #721c24;">Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testFindRelations() {
+            const resultsDiv = document.getElementById('schema-results');
+            resultsDiv.innerHTML = '<div class="loading">Testing Find Relations...</div>';
+
+            const data = {
+                tableName: document.getElementById('findRelationsTable').value || null,
+                exactMatch: document.getElementById('findRelationsExact').checked,
+                useRegex: document.getElementById('findRelationsRegex').checked
+            };
+
+            if (!data.tableName) {
+                resultsDiv.innerHTML = '<div class="status" style="background: #f8d7da; color: #721c24;">Error: Table name is required</div>';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/schema/findrelations', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+                }
+                
+                const result = await response.text();
+                displaySchemaResult('Find Relations', result);
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="status" style="background: #f8d7da; color: #721c24;">Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testListTables() {
+            const resultsDiv = document.getElementById('schema-results');
+            resultsDiv.innerHTML = '<div class="loading">Testing List Tables...</div>';
+
+            try {
+                const response = await fetch('/api/schema/listtables');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+                }
+                
+                const result = await response.text();
+                displaySchemaResult('List All Tables', result);
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="status" style="background: #f8d7da; color: #721c24;">Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testGetInstructions() {
+            const resultsDiv = document.getElementById('schema-results');
+            resultsDiv.innerHTML = '<div class="loading">Testing Get Instructions...</div>';
+
+            try {
+                const response = await fetch('/api/schema/instructions');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+                }
+                
+                const result = await response.text();
+                displaySchemaResult('Profile Instructions', result, false);
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="status" style="background: #f8d7da; color: #721c24;">Error: ${error.message}</div>`;
+            }
+        }
+
+        function displaySchemaResult(title, csvData, isCSV = true) {
+            const resultsDiv = document.getElementById('schema-results');
+            
+            if (isCSV && csvData.includes(',')) {
+                // Parse CSV and display as table
+                const lines = csvData.trim().split('\n');
+                if (lines.length === 0) {
+                    resultsDiv.innerHTML = `<div class="status info">${title}: No results</div>`;
+                    return;
+                }
+
+                const headers = lines[0].split(',');
+                const rows = lines.slice(1);
+                
+                let html = `<div class="status info">${title} Results (${rows.length} rows)</div>`;
+                html += '<div class="csv-table"><table>';
+                html += '<tr>';
+                headers.forEach(header => {
+                    html += `<th>${escapeHtml(header.trim())}</th>`;
+                });
+                html += '</tr>';
+
+                rows.forEach(row => {
+                    if (row.trim()) {
+                        const cells = row.split(',');
+                        html += '<tr>';
+                        cells.forEach((cell, index) => {
+                            html += `<td>${escapeHtml(cell.trim())}</td>`;
+                        });
+                        html += '</tr>';
+                    }
+                });
+                html += '</table></div>';
+                resultsDiv.innerHTML = html;
+            } else {
+                // Display as text
+                resultsDiv.innerHTML = `
+                    <div class="status info">${title} Result</div>
+                    <pre>${escapeHtml(csvData)}</pre>
+                `;
             }
         }
 

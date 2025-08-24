@@ -17,6 +17,8 @@ builder.Services.AddSingleton<SchemaEditorService>();
 builder.Services.AddSingleton<CsvConverterService>();
 builder.Services.AddSingleton<ProfileValidationService>();
 builder.Services.AddSingleton<ISchemaRepository, SchemaRepository>();
+builder.Services.AddSingleton<SqlSchemaBridgeTools>();
+builder.Services.AddSingleton<SqlSchemaEditorTools>();
 builder.Services.AddSingleton<WebDebugService>();
 
 builder.Services

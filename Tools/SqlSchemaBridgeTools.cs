@@ -11,7 +11,7 @@ namespace SqlSchemaBridgeMCP.Tools;
 /// <summary>
 /// Provides tools for querying database schema information.
 /// </summary>
-internal class SqlSchemaBridgeTools
+public class SqlSchemaBridgeTools
 {
     private readonly ProfileManager _profileManager;
     private readonly SchemaProvider _schemaProvider;

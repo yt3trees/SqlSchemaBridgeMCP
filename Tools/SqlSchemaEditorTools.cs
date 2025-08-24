@@ -9,7 +9,7 @@ namespace SqlSchemaBridgeMCP.Tools;
 /// <summary>
 /// Provides tools for editing the database schema CSV files.
 /// </summary>
-internal class SqlSchemaEditorTools
+public class SqlSchemaEditorTools
 {
     private readonly SchemaEditorService _editorService;
     private readonly ILogger<SqlSchemaEditorTools> _logger;
