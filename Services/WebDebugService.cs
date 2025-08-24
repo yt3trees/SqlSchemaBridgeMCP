@@ -332,22 +332,7 @@ public class WebDebugService
             }
         });
 
-        _app.MapGet("/api/schema/listtables", async context =>
-        {
-            try
-            {
-                var result = _schemaTools.SqlSchemaListTables();
-                
-                context.Response.ContentType = "text/plain; charset=utf-8";
-                await context.Response.WriteAsync(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in schema list tables test");
-                context.Response.StatusCode = 500;
-                await context.Response.WriteAsync($"Error: {ex.Message}");
-            }
-        });
+        
 
         _app.MapGet("/api/schema/instructions", async context =>
         {
@@ -495,7 +480,7 @@ public class WebDebugService
 
                 <div style="margin: 20px 0;">
                     <h3>Other Tools</h3>
-                    <button class="btn" onclick="testListTables()">Test List All Tables</button>
+                    
                     <button class="btn" onclick="testGetInstructions()">Test Get Instructions</button>
                 </div>
 
@@ -793,23 +778,7 @@ public class WebDebugService
             }
         }
 
-        async function testListTables() {
-            const resultsDiv = document.getElementById('schema-results');
-            resultsDiv.innerHTML = '<div class="loading">Testing List Tables...</div>';
-
-            try {
-                const response = await fetch('/api/schema/listtables');
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${await response.text()}`);
-                }
-                
-                const result = await response.text();
-                displaySchemaResult('List All Tables', result);
-            } catch (error) {
-                resultsDiv.innerHTML = `<div class="status" style="background: #f8d7da; color: #721c24;">Error: ${error.message}</div>`;
-            }
-        }
+        
 
         async function testGetInstructions() {
             const resultsDiv = document.getElementById('schema-results');
