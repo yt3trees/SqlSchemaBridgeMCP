@@ -310,12 +310,4 @@ public class SqlSchemaBridgeTools
 
         return _csvConverter.ConvertRelationsToCsv(results);
     }
-
-    [McpServerTool]
-    [Description("Lists all available tables in CSV format.")]
-    public string SqlSchemaListTables()
-    {
-        _logger.LogInformation("Returning all tables.");
-        return _csvConverter.ConvertTablesToCsv(_schemaProvider.Tables);
-    }
 }

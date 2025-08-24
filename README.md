@@ -267,7 +267,7 @@ The output will be placed in the `bin/Release/net8.0/<RID>/publish/` directory.
 
 ## Available Tools
 
-The server exposes a comprehensive set of 14 tools for the AI agent, divided into four main categories: schema querying, schema editing, profile management, and profile validation.
+The server exposes a comprehensive set of 13 tools for the AI agent, divided into four main categories: schema querying, schema editing, profile management, and profile validation.
 
 ### Schema Querying Tools
 
@@ -277,11 +277,6 @@ These tools allow the agent to inspect the database schema and return results in
 -   **Description**: Gets the instructions for the AI, if a `README.md` file is present in the current profile's directory. **This tool must be executed first when using this MCP server.**
 -   **Arguments**: None.
 -   **Returns**: String containing profile-specific instructions, or a default message if no instructions are found.
-
-#### `sql_schema_list_tables`
--   **Description**: Lists all available tables in CSV format.
--   **Arguments**: None.
--   **Returns**: CSV format of all tables.
 
 #### `sql_schema_find_table`
 -   **Description**: Searches for tables by logical or physical name and returns all matches in CSV format.
