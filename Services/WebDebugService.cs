@@ -361,10 +361,10 @@ public class WebDebugService
     <title>SqlSchemaBridgeMCP Debug Interface</title>
     <meta charset="utf-8">
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f5f5f5; }
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #121212; color: #e0e0e0; }
         .container { max-width: 1200px; margin: 0 auto; }
-        .card { background: white; border-radius: 8px; padding: 20px; margin: 10px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .header { text-align: center; color: #333; }
+        .card { background: #1e1e1e; border-radius: 8px; padding: 20px; margin: 10px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.3); border: 1px solid #333; }
+        .header { text-align: center; color: #ffffff; }
         .section { margin: 20px 0; }
         .btn { background: #007cba; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; margin: 5px; text-decoration: none; display: inline-block; }
         .btn:hover { background: #005a87; }
@@ -373,14 +373,15 @@ public class WebDebugService
         @media (max-width: 768px) {
             .grid { grid-template-columns: 1fr; }
         }
-        pre { background: #f8f8f8; padding: 15px; border-radius: 4px; overflow-x: auto; white-space: pre-wrap; }
+        pre { background: #2a2a2a; padding: 15px; border-radius: 4px; overflow-x: auto; white-space: pre-wrap; border: 1px solid #444; }
         .status { padding: 5px 10px; border-radius: 4px; margin: 5px 0; }
-        .info { background: #d1ecf1; color: #0c5460; }
-        .loading { color: #666; font-style: italic; }
+        .info { background: #0c5460; color: #d1ecf1; }
+        .loading { color: #999; font-style: italic; }
         table { width: 100%; border-collapse: collapse; margin: 10px 0; table-layout: fixed; }
-        th, td { padding: 6px 8px; text-align: left; border: 1px solid #ddd; word-wrap: break-word; overflow: hidden; text-overflow: ellipsis; }
-        th { background: #f8f9fa; font-weight: bold; }
-        tr:hover { background: #f8f9fa; }
+        th, td { padding: 6px 8px; text-align: left; border: 1px solid #444; word-wrap: break-word; overflow: hidden; text-overflow: ellipsis; }
+        th { background: #2c2c2c; font-weight: bold; }
+        tr:hover { background: #3a3a3a; }
+        input[type="text"], select { background-color: #2a2a2a; color: #e0e0e0; border: 1px solid #555; padding: 8px; border-radius: 4px; }
         .actions-column { width: 140px; min-width: 140px; }
         .name-column { width: 35%; }
         .size-column { width: 70px; text-align: right; font-size: 12px; }
@@ -398,9 +399,9 @@ public class WebDebugService
             margin: 2px 0;
             text-align: center;
         }
-        .csv-table { max-height: 400px; overflow: auto; border: 1px solid #ddd; margin: 10px 0; }
+        .csv-table { max-height: 400px; overflow: auto; border: 1px solid #444; margin: 10px 0; }
         .csv-table table { margin: 0; table-layout: auto; }
-        .csv-table th { position: sticky; top: 0; background: #f8f9fa; z-index: 1; }
+        .csv-table th { position: sticky; top: 0; background: #2c2c2c; z-index: 1; }
         .tool-test { width: 1160px; }
     </style>
 </head>
@@ -515,7 +516,7 @@ public class WebDebugService
 
                 data.available_profiles.forEach(profile => {
                     const isCurrent = profile.name === data.current_profile;
-                    html += `<tr ${isCurrent ? 'style="background: #e7f3ff;"' : ''}>
+                    html += `<tr ${isCurrent ? 'style="background: #003d5c;"' : ''}>
                         <td>${profile.name} ${isCurrent ? '(current)' : ''}</td>
                         <td><button class="btn" onclick="loadProfileFiles('${profile.name}')">View Files</button></td>
                     </tr>`;
@@ -611,15 +612,15 @@ public class WebDebugService
                         <head>
                             <title>${fileName} - ${profileName}</title>
                             <style>
-                                body { font-family: Arial, sans-serif; margin: 20px; }
-                                .header { background: #f8f9fa; padding: 15px; border: 1px solid #dee2e6; margin-bottom: 15px; border-radius: 4px; }
-                                .csv-table { max-height: 500px; overflow: auto; border: 1px solid #ddd; }
+                                body { font-family: Arial, sans-serif; margin: 20px; background-color: #121212; color: #e0e0e0; }
+                                .header { background: #1e1e1e; padding: 15px; border: 1px solid #333; margin-bottom: 15px; border-radius: 4px; }
+                                .csv-table { max-height: 500px; overflow: auto; border: 1px solid #444; }
                                 table { width: 100%; border-collapse: collapse; }
-                                th, td { padding: 8px 12px; text-align: left; border: 1px solid #ddd; }
-                                th { background: #f8f9fa; font-weight: bold; position: sticky; top: 0; z-index: 1; }
-                                tr:nth-child(even) { background: #f9f9f9; }
-                                tr:hover { background: #e8f4fd; }
-                                .stats { margin-top: 10px; font-size: 14px; color: #666; }
+                                th, td { padding: 8px 12px; text-align: left; border: 1px solid #444; }
+                                th { background: #2c2c2c; font-weight: bold; position: sticky; top: 0; z-index: 1; }
+                                tr:nth-child(even) { background: #2a2a2a; }
+                                tr:hover { background: #3a3a3a; }
+                                .stats { margin-top: 10px; font-size: 14px; color: #aaa; }
                             </style>
                         </head>
                         <body>
