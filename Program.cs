@@ -17,6 +17,7 @@ builder.Services.AddSingleton<SchemaEditorService>();
 builder.Services.AddSingleton<CsvConverterService>();
 builder.Services.AddSingleton<ProfileValidationService>();
 builder.Services.AddSingleton<ISchemaRepository, SchemaRepository>();
+builder.Services.AddSingleton<WebDebugService>();
 
 builder.Services
     .AddMcpServer()
@@ -29,4 +30,27 @@ builder.Services
     .WithListResourcesHandler(SqlSchemaBridgeMCP.Resources.ResourceHandlers.HandleListResources)
     .WithReadResourceHandler(SqlSchemaBridgeMCP.Resources.ResourceHandlers.HandleReadResource);
 
-await builder.Build().RunAsync();
+var app = builder.Build();
+
+// Configure and start web debug interface based on configuration
+var webConfig = WebDebugConfiguration.FromCommandLineArgs(args);
+
+if (webConfig.EnableWebDebugInterface && webConfig.AutoStartWithMCP)
+{
+    try
+    {
+        var webDebugService = app.Services.GetRequiredService<WebDebugService>();
+        webDebugService.StartInBackground();
+        
+        // Give the web server a moment to start and report its URL
+        await Task.Delay(1000);
+    }
+    catch (Exception ex)
+    {
+        var logger = app.Services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Failed to start web debug interface");
+        Console.Error.WriteLine($"Warning: Web debug interface failed to start: {ex.Message}");
+    }
+}
+
+await app.RunAsync();

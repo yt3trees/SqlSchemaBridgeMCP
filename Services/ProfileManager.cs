@@ -20,7 +20,7 @@ public class ProfileManager
     {
         _logger = logger;
 
-        var rootDirectory = GetBaseDirectory();
+        var rootDirectory = GetBaseDirectoryInternal();
 
         // Ensure the root directory for profiles exists.
         if (!Directory.Exists(rootDirectory))
@@ -145,17 +145,32 @@ public class ProfileManager
 
     public string GetProfileDirectory(string profileName)
     {
-        return Path.Combine(GetBaseDirectory(), profileName);
+        return Path.Combine(GetBaseDirectoryInternal(), profileName);
     }
 
     public string GetProfilesRootDirectory()
     {
-        return GetBaseDirectory();
+        return GetBaseDirectoryInternal();
     }
 
-    private string GetBaseDirectory()
+    private string GetBaseDirectoryInternal()
     {
         var userProfilePath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         return Path.Combine(userProfilePath, ".SqlSchemaBridgeMCP");
+    }
+
+    public string GetBaseDirectory() => GetBaseDirectoryInternal();
+
+    public string[] GetAvailableProfiles()
+    {
+        var baseDir = GetBaseDirectoryInternal();
+        if (!Directory.Exists(baseDir))
+            return Array.Empty<string>();
+
+        return Directory.GetDirectories(baseDir)
+            .Select(Path.GetFileName)
+            .Where(name => !string.IsNullOrEmpty(name))
+            .Cast<string>()
+            .ToArray();
     }
 }
