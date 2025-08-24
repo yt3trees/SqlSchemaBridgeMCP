@@ -285,6 +285,7 @@ These tools allow the agent to inspect the database schema and return results in
     -   `databaseName: str` (optional): The physical name of the database to search within.
     -   `schemaName: str` (optional): The physical name of the schema to search within.
     -   `exactMatch: bool` (optional): If true, performs a case-insensitive exact match. Defaults to `false` (contains).
+    -   `useRegex: bool` (optional): Enables regular expression matching for name searches. Takes precedence over exactMatch if true. Defaults to `false`.
 -   **Returns**: CSV format table data.
 
 #### `sql_schema_find_column`
@@ -294,6 +295,7 @@ These tools allow the agent to inspect the database schema and return results in
     -   `physicalName: str` (optional): The physical name of the column (e.g., "CUSTOMER_NAME").
     -   `tableName: str` (optional): The physical name of the table to search within (e.g., "M_CUSTOMERS").
     -   `exactMatch: bool` (optional): If true, performs a case-insensitive exact match. Defaults to `false` (contains).
+    -   `useRegex: bool` (optional): Enables regular expression matching for name searches. Takes precedence over exactMatch if true. Defaults to `false`.
 -   **Returns**: CSV format column data (max 1000 results).
 
 #### `sql_schema_find_relations`
@@ -301,6 +303,7 @@ These tools allow the agent to inspect the database schema and return results in
 -   **Arguments**:
     -   `tableName: str`: The physical name of the table (e.g., "M_CUSTOMERS").
     -   `exactMatch: bool` (optional): If true, performs a case-insensitive exact match. Defaults to `false` (contains).
+    -   `useRegex: bool` (optional): Enables regular expression matching for table name search. Takes precedence over exactMatch if true. Defaults to `false`.
 -   **Returns**: CSV format relation data.
 
 ### Schema Editing Tools

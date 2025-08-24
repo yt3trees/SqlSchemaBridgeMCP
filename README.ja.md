@@ -284,6 +284,7 @@ dotnet publish -c Release -r osx-x64 --self-contained true
     -   `databaseName: str` (任意): 検索対象のデータベースの物理名。
     -   `schemaName: str` (任意): 検索対象のスキーマの物理名。
     -   `exactMatch: bool` (任意): `true`の場合、大文字と小文字を区別しない完全一致を実行します。デフォルトは`false` (部分一致)。
+    -   `useRegex: bool` (任意): 名前検索で正規表現マッチングを有効にします。`true`の場合、exactMatchより優先されます。デフォルトは`false`。
 -   **戻り値**: CSV形式のテーブルデータ。
 
 #### `sql_schema_find_column`
@@ -293,6 +294,7 @@ dotnet publish -c Release -r osx-x64 --self-contained true
     -   `physicalName: str` (任意): 列の物理名 (例: "CUSTOMER_NAME")。
     -   `tableName: str` (任意): 検索対象のテーブルの物理名 (例: "M_CUSTOMERS")。
     -   `exactMatch: bool` (任意): `true`の場合、大文字と小文字を区別しない完全一致を実行します。デフォルトは`false` (部分一致)。
+    -   `useRegex: bool` (任意): 名前検索で正規表現マッチングを有効にします。`true`の場合、exactMatchより優先されます。デフォルトは`false`。
 -   **戻り値**: CSV形式の列データ(最大1000件)。
 
 #### `sql_schema_find_relations`
@@ -300,6 +302,7 @@ dotnet publish -c Release -r osx-x64 --self-contained true
 -   **引数**:
     -   `tableName: str`: テーブルの物理名 (例: "M_CUSTOMERS")。
     -   `exactMatch: bool` (任意): `true`の場合、大文字と小文字を区別しない完全一致を実行します。デフォルトは`false` (部分一致)。
+    -   `useRegex: bool` (任意): テーブル名検索で正規表現マッチングを有効にします。`true`の場合、exactMatchより優先されます。デフォルトは`false`。
 -   **戻り値**: CSV形式のリレーションデータ。
 
 ### スキーマ編集ツール

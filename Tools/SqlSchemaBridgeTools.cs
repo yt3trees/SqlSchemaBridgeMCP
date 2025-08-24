@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel;
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Server;
 using SqlSchemaBridgeMCP.Models;
@@ -46,43 +47,104 @@ internal class SqlSchemaBridgeTools
         [Description("The physical name of the table (e.g., 'M_CUSTOMERS')")] string? physicalName = null,
         [Description("The physical name of the database to search within.")] string? databaseName = null,
         [Description("The physical name of the schema to search within.")] string? schemaName = null,
-        [Description("Specifies whether to perform an exact match (case-insensitive). Defaults to false (contains).")] bool exactMatch = false)
+        [Description("Specifies whether to perform an exact match (case-insensitive). Defaults to false (contains).")] bool exactMatch = false,
+        [Description("Enables regular expression matching for name searches. Takes precedence over exactMatch if true.")] bool useRegex = false)
     {
         if (string.IsNullOrWhiteSpace(logicalName) && string.IsNullOrWhiteSpace(physicalName) && string.IsNullOrWhiteSpace(databaseName) && string.IsNullOrWhiteSpace(schemaName))
         {
             throw new ArgumentException("At least one of the following must be provided: logical_name, physical_name, database_name, or schema_name.");
         }
 
-        _logger.LogDebug("Searching for table with logicalName: '{LogicalName}', physicalName: '{PhysicalName}', databaseName: '{DatabaseName}', schemaName: '{SchemaName}', exactMatch: {ExactMatch}", logicalName, physicalName, databaseName, schemaName, exactMatch);
+        _logger.LogDebug("Searching for table with logicalName: '{LogicalName}', physicalName: '{PhysicalName}', databaseName: '{DatabaseName}', schemaName: '{SchemaName}', exactMatch: {ExactMatch}, useRegex: {UseRegex}", logicalName, physicalName, databaseName, schemaName, exactMatch, useRegex);
 
         var query = _schemaProvider.Tables.AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(logicalName))
         {
-            query = exactMatch
-                ? query.Where(t => t.LogicalName.Equals(logicalName, StringComparison.OrdinalIgnoreCase))
-                : query.Where(t => t.LogicalName.Contains(logicalName, StringComparison.OrdinalIgnoreCase));
+            if (useRegex)
+            {
+                try
+                {
+                    var regex = new Regex(logicalName, RegexOptions.IgnoreCase);
+                    query = query.Where(t => regex.IsMatch(t.LogicalName));
+                }
+                catch (ArgumentException ex)
+                {
+                    throw new ArgumentException($"Invalid regular expression for logicalName: {ex.Message}", ex);
+                }
+            }
+            else
+            {
+                query = exactMatch
+                    ? query.Where(t => t.LogicalName.Equals(logicalName, StringComparison.OrdinalIgnoreCase))
+                    : query.Where(t => t.LogicalName.Contains(logicalName, StringComparison.OrdinalIgnoreCase));
+            }
         }
 
         if (!string.IsNullOrWhiteSpace(physicalName))
         {
-            query = exactMatch
-                ? query.Where(t => t.PhysicalName.Equals(physicalName, StringComparison.OrdinalIgnoreCase))
-                : query.Where(t => t.PhysicalName.Contains(physicalName, StringComparison.OrdinalIgnoreCase));
+            if (useRegex)
+            {
+                try
+                {
+                    var regex = new Regex(physicalName, RegexOptions.IgnoreCase);
+                    query = query.Where(t => regex.IsMatch(t.PhysicalName));
+                }
+                catch (ArgumentException ex)
+                {
+                    throw new ArgumentException($"Invalid regular expression for physicalName: {ex.Message}", ex);
+                }
+            }
+            else
+            {
+                query = exactMatch
+                    ? query.Where(t => t.PhysicalName.Equals(physicalName, StringComparison.OrdinalIgnoreCase))
+                    : query.Where(t => t.PhysicalName.Contains(physicalName, StringComparison.OrdinalIgnoreCase));
+            }
         }
 
         if (!string.IsNullOrWhiteSpace(databaseName))
         {
-            query = exactMatch
-                ? query.Where(t => t.DatabaseName != null && t.DatabaseName.Equals(databaseName, StringComparison.OrdinalIgnoreCase))
-                : query.Where(t => t.DatabaseName != null && t.DatabaseName.Contains(databaseName, StringComparison.OrdinalIgnoreCase));
+            if (useRegex)
+            {
+                try
+                {
+                    var regex = new Regex(databaseName, RegexOptions.IgnoreCase);
+                    query = query.Where(t => t.DatabaseName != null && regex.IsMatch(t.DatabaseName));
+                }
+                catch (ArgumentException ex)
+                {
+                    throw new ArgumentException($"Invalid regular expression for databaseName: {ex.Message}", ex);
+                }
+            }
+            else
+            {
+                query = exactMatch
+                    ? query.Where(t => t.DatabaseName != null && t.DatabaseName.Equals(databaseName, StringComparison.OrdinalIgnoreCase))
+                    : query.Where(t => t.DatabaseName != null && t.DatabaseName.Contains(databaseName, StringComparison.OrdinalIgnoreCase));
+            }
         }
 
         if (!string.IsNullOrWhiteSpace(schemaName))
         {
-            query = exactMatch
-                ? query.Where(t => t.SchemaName != null && t.SchemaName.Equals(schemaName, StringComparison.OrdinalIgnoreCase))
-                : query.Where(t => t.SchemaName != null && t.SchemaName.Contains(schemaName, StringComparison.OrdinalIgnoreCase));
+            if (useRegex)
+            {
+                try
+                {
+                    var regex = new Regex(schemaName, RegexOptions.IgnoreCase);
+                    query = query.Where(t => t.SchemaName != null && regex.IsMatch(t.SchemaName));
+                }
+                catch (ArgumentException ex)
+                {
+                    throw new ArgumentException($"Invalid regular expression for schemaName: {ex.Message}", ex);
+                }
+            }
+            else
+            {
+                query = exactMatch
+                    ? query.Where(t => t.SchemaName != null && t.SchemaName.Equals(schemaName, StringComparison.OrdinalIgnoreCase))
+                    : query.Where(t => t.SchemaName != null && t.SchemaName.Contains(schemaName, StringComparison.OrdinalIgnoreCase));
+            }
         }
 
         var results = query.ToList();
@@ -102,36 +164,82 @@ internal class SqlSchemaBridgeTools
         [Description("The logical name of the column (e.g., 'Customer Name')")] string? logicalName = null,
         [Description("The physical name of the column (e.g., 'CUSTOMER_NAME')")] string? physicalName = null,
         [Description("The physical name of the table to search within (e.g., 'M_CUSTOMERS')")] string? tableName = null,
-        [Description("Specifies whether to perform an exact match (case-insensitive). Defaults to false (contains).")] bool exactMatch = false)
+        [Description("Specifies whether to perform an exact match (case-insensitive). Defaults to false (contains).")] bool exactMatch = false,
+        [Description("Enables regular expression matching for name searches. Takes precedence over exactMatch if true.")] bool useRegex = false)
     {
         if (string.IsNullOrWhiteSpace(logicalName) && string.IsNullOrWhiteSpace(physicalName) && string.IsNullOrWhiteSpace(tableName))
         {
             throw new ArgumentException("At least one of the following must be provided: logical_name, physical_name, or table_name.");
         }
 
-        _logger.LogDebug("Searching for column with logicalName: '{LogicalName}', physicalName: '{PhysicalName}', in table: '{TableName}', exactMatch: {ExactMatch}", logicalName, physicalName, tableName, exactMatch);
+        _logger.LogDebug("Searching for column with logicalName: '{LogicalName}', physicalName: '{PhysicalName}', in table: '{TableName}', exactMatch: {ExactMatch}, useRegex: {UseRegex}", logicalName, physicalName, tableName, exactMatch, useRegex);
 
         var query = _schemaProvider.Columns.AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(logicalName))
         {
-            query = exactMatch
-                ? query.Where(c => c.LogicalName.Equals(logicalName, StringComparison.OrdinalIgnoreCase))
-                : query.Where(c => c.LogicalName.Contains(logicalName, StringComparison.OrdinalIgnoreCase));
+            if (useRegex)
+            {
+                try
+                {
+                    var regex = new Regex(logicalName, RegexOptions.IgnoreCase);
+                    query = query.Where(c => regex.IsMatch(c.LogicalName));
+                }
+                catch (ArgumentException ex)
+                {
+                    throw new ArgumentException($"Invalid regular expression for logicalName: {ex.Message}", ex);
+                }
+            }
+            else
+            {
+                query = exactMatch
+                    ? query.Where(c => c.LogicalName.Equals(logicalName, StringComparison.OrdinalIgnoreCase))
+                    : query.Where(c => c.LogicalName.Contains(logicalName, StringComparison.OrdinalIgnoreCase));
+            }
         }
 
         if (!string.IsNullOrWhiteSpace(physicalName))
         {
-            query = exactMatch
-                ? query.Where(c => c.PhysicalName.Equals(physicalName, StringComparison.OrdinalIgnoreCase))
-                : query.Where(c => c.PhysicalName.Contains(physicalName, StringComparison.OrdinalIgnoreCase));
+            if (useRegex)
+            {
+                try
+                {
+                    var regex = new Regex(physicalName, RegexOptions.IgnoreCase);
+                    query = query.Where(c => regex.IsMatch(c.PhysicalName));
+                }
+                catch (ArgumentException ex)
+                {
+                    throw new ArgumentException($"Invalid regular expression for physicalName: {ex.Message}", ex);
+                }
+            }
+            else
+            {
+                query = exactMatch
+                    ? query.Where(c => c.PhysicalName.Equals(physicalName, StringComparison.OrdinalIgnoreCase))
+                    : query.Where(c => c.PhysicalName.Contains(physicalName, StringComparison.OrdinalIgnoreCase));
+            }
         }
 
         if (!string.IsNullOrWhiteSpace(tableName))
         {
-            query = exactMatch
-                ? query.Where(c => c.TablePhysicalName.Equals(tableName, StringComparison.OrdinalIgnoreCase))
-                : query.Where(c => c.TablePhysicalName.Contains(tableName, StringComparison.OrdinalIgnoreCase));
+            if (useRegex)
+            {
+                try
+                {
+                    var regex = new Regex(tableName, RegexOptions.IgnoreCase);
+                    query = query.Where(c => regex.IsMatch(c.TablePhysicalName));
+                }
+                catch (ArgumentException ex)
+                {
+                    throw new ArgumentException($"Invalid regular expression for tableName: {ex.Message}", ex);
+                }
+            }
+            else
+            {
+                query = exactMatch
+                    ? query.Where(c => c.TablePhysicalName.Equals(tableName, StringComparison.OrdinalIgnoreCase))
+                    : query.Where(c => c.TablePhysicalName.Contains(tableName, StringComparison.OrdinalIgnoreCase));
+            }
         }
 
         var results = query.ToList();
@@ -161,20 +269,36 @@ internal class SqlSchemaBridgeTools
     [Description("Finds relationships and join conditions for a specified table and returns results in CSV format.")]
     public string SqlSchemaFindRelations(
         [Description("The physical name of the table (e.g., 'M_CUSTOMERS')")] string tableName,
-        [Description("Specifies whether to perform an exact match (case-insensitive). Defaults to false (contains).")] bool exactMatch = false)
+        [Description("Specifies whether to perform an exact match (case-insensitive). Defaults to false (contains).")] bool exactMatch = false,
+        [Description("Enables regular expression matching for table name search. Takes precedence over exactMatch if true.")] bool useRegex = false)
     {
         if (string.IsNullOrWhiteSpace(tableName))
         {
             throw new ArgumentException("The table_name must be provided.");
         }
 
-        _logger.LogDebug("Searching for relations involving table: '{TableName}', exactMatch: {ExactMatch}", tableName, exactMatch);
+        _logger.LogDebug("Searching for relations involving table: '{TableName}', exactMatch: {ExactMatch}, useRegex: {UseRegex}", tableName, exactMatch, useRegex);
 
         var query = _schemaProvider.Relations.AsQueryable();
 
-        query = exactMatch
-            ? query.Where(r => r.SourceTable.Equals(tableName, StringComparison.OrdinalIgnoreCase) || r.TargetTable.Equals(tableName, StringComparison.OrdinalIgnoreCase))
-            : query.Where(r => r.SourceTable.Contains(tableName, StringComparison.OrdinalIgnoreCase) || r.TargetTable.Contains(tableName, StringComparison.OrdinalIgnoreCase));
+        if (useRegex)
+        {
+            try
+            {
+                var regex = new Regex(tableName, RegexOptions.IgnoreCase);
+                query = query.Where(r => regex.IsMatch(r.SourceTable) || regex.IsMatch(r.TargetTable));
+            }
+            catch (ArgumentException ex)
+            {
+                throw new ArgumentException($"Invalid regular expression for tableName: {ex.Message}", ex);
+            }
+        }
+        else
+        {
+            query = exactMatch
+                ? query.Where(r => r.SourceTable.Equals(tableName, StringComparison.OrdinalIgnoreCase) || r.TargetTable.Equals(tableName, StringComparison.OrdinalIgnoreCase))
+                : query.Where(r => r.SourceTable.Contains(tableName, StringComparison.OrdinalIgnoreCase) || r.TargetTable.Contains(tableName, StringComparison.OrdinalIgnoreCase));
+        }
 
         var results = query.ToList();
 
