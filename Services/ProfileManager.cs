@@ -215,7 +215,7 @@ public class ProfileManager
                         .Where(name => name != null)
                         .Cast<string>()
                         .ToList();
-                    
+
                     _logger.LogInformation("Found {Count} profiles in '{Path}': {Profiles}", profilesInDir.Count, baseDir, string.Join(", ", profilesInDir));
                     allProfiles.AddRange(profilesInDir);
                 }
@@ -229,7 +229,7 @@ public class ProfileManager
                 _logger.LogWarning("Profile search path does not exist: {Path}", baseDir);
             }
         }
-        
+
         var distinctProfiles = allProfiles.Distinct().ToArray();
         _logger.LogInformation("Total unique profiles found: {Count}", distinctProfiles.Length);
         return distinctProfiles;

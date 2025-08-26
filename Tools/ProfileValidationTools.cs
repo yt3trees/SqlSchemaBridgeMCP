@@ -18,7 +18,7 @@ public class ProfileValidationTools
     [McpServerTool]
     [Description("Validates CSV file settings for the specified profile")]
     public async Task<object> SqlSchemaValidateProfile(
-        [Description("Profile name to validate. If omitted, validates the current profile")] 
+        [Description("Profile name to validate. If omitted, validates the current profile")]
         string? profileName = null)
     {
         try

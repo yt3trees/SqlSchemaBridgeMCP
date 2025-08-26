@@ -134,7 +134,7 @@ public static class ResourceHandlers
 
                 mermaidDiagram.AppendLine($"        {dataType} {column.PhysicalName}{pk}{fk}{description}");
             }
-                mermaidDiagram.AppendLine("}");
+            mermaidDiagram.AppendLine("}");
         }
 
         foreach (var relation in relations)
@@ -153,13 +153,13 @@ public static class ResourceHandlers
         var upperType = dataType.ToUpper();
 
         // String types
-        if (upperType.Contains("NVARCHAR") || upperType.Contains("VARCHAR") || 
+        if (upperType.Contains("NVARCHAR") || upperType.Contains("VARCHAR") ||
             upperType.Contains("NCHAR") || upperType.Contains("CHAR") ||
             upperType.Contains("NTEXT") || upperType.Contains("TEXT"))
             return "string";
 
         // Date/time types
-        if (upperType.Contains("DATETIME") || upperType.Contains("DATE") || 
+        if (upperType.Contains("DATETIME") || upperType.Contains("DATE") ||
             upperType.Contains("TIME") || upperType.Contains("TIMESTAMP"))
             return "datetime";
 

@@ -369,8 +369,8 @@ public class ValidationResult
         foreach (var group in Messages.GroupBy(m => m.Type))
         {
             sb.AppendLine($"[{group.Key}]");
-            var messagesToShow = group.Key == MessageType.Error 
-                ? group.AsEnumerable() 
+            var messagesToShow = group.Key == MessageType.Error
+                ? group.AsEnumerable()
                 : group.OrderBy(m => m.Message);
 
             foreach (var message in messagesToShow)

@@ -42,7 +42,7 @@ public class SqlSchemaEditorTools
         switch (type)
         {
             case "table":
-                return op == "add" 
+                return op == "add"
                     ? AddTableInternal(logicalName!, physicalName!, primaryKeyOrDataType!, description, databaseName, schemaName)
                     : DeleteTableInternal(physicalName!);
 

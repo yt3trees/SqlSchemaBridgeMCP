@@ -94,7 +94,7 @@ public class WebDebugService
 
             _logger.LogInformation("Web debug server started at http://localhost:{Port}", _port);
             _logger.LogInformation("Dashboard available at: http://localhost:{Port}", _port);
-         // Start and keep the server running
+            // Start and keep the server running
             await _app.RunAsync();
         }
         catch (Exception ex)
@@ -134,7 +134,7 @@ public class WebDebugService
             {
                 var profiles = _profileManager.GetAvailableProfiles();
                 var currentProfile = _profileManager.CurrentProfile;
- var result = new
+                var result = new
                 {
                     current_profile = currentProfile,
                     available_profiles = profiles.Select(p => new { name = p }).ToArray()
@@ -196,7 +196,7 @@ public class WebDebugService
             {
                 var profilePath = _profileManager.GetProfileDirectory(profileName);
                 var filePath = Path.Combine(profilePath, fileName);
- if (!File.Exists(filePath) || !fileName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
+                if (!File.Exists(filePath) || !fileName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
                 {
                     context.Response.StatusCode = 404;
                     await context.Response.WriteAsync($"File '{fileName}' not found in profile '{profileName}'");
@@ -205,7 +205,7 @@ public class WebDebugService
 
                 var contentType = "text/csv; charset=utf-8";
                 var content = await File.ReadAllTextAsync(filePath);
- context.Response.ContentType = contentType;
+                context.Response.ContentType = contentType;
                 context.Response.Headers.Add("Content-Disposition", $"inline; filename=\"{fileName}\"");
                 await context.Response.WriteAsync(content);
             }
@@ -254,7 +254,7 @@ public class WebDebugService
             {
                 var body = await new StreamReader(context.Request.Body).ReadToEndAsync();
                 var request = JsonSerializer.Deserialize<Dictionary<string, object>>(body);
-                
+
                 var logicalName = request.TryGetValue("logicalName", out var ln) ? ln?.ToString() : null;
                 var physicalName = request.TryGetValue("physicalName", out var pn) ? pn?.ToString() : null;
                 var databaseName = request.TryGetValue("databaseName", out var dn) ? dn?.ToString() : null;
@@ -263,7 +263,7 @@ public class WebDebugService
                 var useRegex = request.TryGetValue("useRegex", out var ur) && bool.Parse(ur?.ToString() ?? "false");
 
                 var result = _schemaTools.SqlSchemaFindTable(logicalName, physicalName, databaseName, schemaName, exactMatch, useRegex);
-                
+
                 context.Response.ContentType = "text/plain; charset=utf-8";
                 await context.Response.WriteAsync(result);
             }
@@ -281,7 +281,7 @@ public class WebDebugService
             {
                 var body = await new StreamReader(context.Request.Body).ReadToEndAsync();
                 var request = JsonSerializer.Deserialize<Dictionary<string, object>>(body);
-                
+
                 var logicalName = request.TryGetValue("logicalName", out var ln) ? ln?.ToString() : null;
                 var physicalName = request.TryGetValue("physicalName", out var pn) ? pn?.ToString() : null;
                 var tableName = request.TryGetValue("tableName", out var tn) ? tn?.ToString() : null;
@@ -289,7 +289,7 @@ public class WebDebugService
                 var useRegex = request.TryGetValue("useRegex", out var ur) && bool.Parse(ur?.ToString() ?? "false");
 
                 var result = _schemaTools.SqlSchemaFindColumn(logicalName, physicalName, tableName, exactMatch, useRegex);
-                
+
                 context.Response.ContentType = "text/plain; charset=utf-8";
                 await context.Response.WriteAsync(result);
             }
@@ -307,7 +307,7 @@ public class WebDebugService
             {
                 var body = await new StreamReader(context.Request.Body).ReadToEndAsync();
                 var request = JsonSerializer.Deserialize<Dictionary<string, object>>(body);
-                
+
                 var tableName = request.TryGetValue("tableName", out var tn) ? tn?.ToString() : null;
                 var exactMatch = request.TryGetValue("exactMatch", out var em) && bool.Parse(em?.ToString() ?? "false");
                 var useRegex = request.TryGetValue("useRegex", out var ur) && bool.Parse(ur?.ToString() ?? "false");
@@ -320,7 +320,7 @@ public class WebDebugService
                 }
 
                 var result = _schemaTools.SqlSchemaFindRelations(tableName, exactMatch, useRegex);
-                
+
                 context.Response.ContentType = "text/plain; charset=utf-8";
                 await context.Response.WriteAsync(result);
             }
@@ -332,14 +332,14 @@ public class WebDebugService
             }
         });
 
-        
+
 
         _app.MapGet("/api/schema/instructions", async context =>
         {
             try
             {
                 var result = _schemaTools.SqlSchemaGetProfileInstructions();
-                
+
                 context.Response.ContentType = "text/plain; charset=utf-8";
                 await context.Response.WriteAsync(result);
             }
