@@ -177,7 +177,8 @@ public class ProfileManager
         var envPath = Environment.GetEnvironmentVariable("SQLSCHEMABRIDGEMCP_PROFILES_PATH");
         if (!string.IsNullOrEmpty(envPath))
         {
-            paths.Add(envPath);
+            var expandedPath = Environment.ExpandEnvironmentVariables(envPath);
+            paths.Add(expandedPath);
         }
         paths.Add(GetDefaultBaseDirectory());
         return paths.Distinct().ToList();
