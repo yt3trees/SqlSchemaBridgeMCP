@@ -13,8 +13,8 @@ graph TB
     CSVFiles["📄 CSV Files<br/>(tables.csv, columns.csv, relations.csv)"]
 
     subgraph "Available MCP Tools"
-        QueryTools["🔍 Schema Querying<br/>(sql_schema_find_table, sql_schema_find_column, sql_schema_find_relations)"]
-        EditTools["✏️ Schema Editing<br/>(sql_schema_manage_schema)"]
+        QueryTools["🔍 Schema Querying"]
+        EditTools["✏️ Schema Editing"]
     end
 
     %% Main Flow

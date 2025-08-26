@@ -13,8 +13,8 @@ graph TB
     CSVFiles["📄 CSVファイル<br/>(tables.csv, columns.csv, relations.csv)"]
 
     subgraph "利用可能なMCPツール"
-        QueryTools["🔍 スキーマクエリ<br/>(sql_schema_find_table, sql_schema_find_column, sql_schema_find_relations)"]
-        EditTools["✏️ スキーマ編集<br/>(sql_schema_manage_schema)"]
+        QueryTools["🔍 スキーマクエリ"]
+        EditTools["✏️ スキーマ編集"]
     end
 
     %% メインフロー
