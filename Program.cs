@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.AI;
 using SqlSchemaBridgeMCP.Repositories;
 using SqlSchemaBridgeMCP.Services;
+using SqlSchemaBridgeMCP.Services.Database;
 using SqlSchemaBridgeMCP.Tools;
 using ModelContextProtocol.Protocol;
 
@@ -21,6 +22,11 @@ builder.Services.AddSingleton<SqlSchemaBridgeTools>();
 builder.Services.AddSingleton<SqlSchemaEditorTools>();
 builder.Services.AddSingleton<WebDebugService>();
 
+// Database connection services
+builder.Services.AddSingleton<DatabaseSchemaProviderFactory>();
+builder.Services.AddSingleton<DatabaseSchemaImportService>();
+builder.Services.AddSingleton<DatabaseConnectionTools>();
+
 builder.Services
     .AddMcpServer()
     .WithStdioServerTransport()
@@ -28,6 +34,7 @@ builder.Services
     .WithTools<SqlSchemaEditorTools>()
     .WithTools<ProfileValidationTools>()
     .WithTools<ProfileManagementTools>()
+    .WithTools<DatabaseConnectionTools>()
     .WithListResourcesHandler(SqlSchemaBridgeMCP.Resources.ResourceHandlers.HandleListResources)
     .WithReadResourceHandler(SqlSchemaBridgeMCP.Resources.ResourceHandlers.HandleReadResource);
 
@@ -42,7 +49,7 @@ if (webConfig.EnableWebDebugInterface && webConfig.AutoStartWithMCP)
     {
         var webDebugService = app.Services.GetRequiredService<WebDebugService>();
         webDebugService.StartInBackground();
-        
+
         // Give the web server a moment to start and report its URL
         await Task.Delay(1000);
     }

@@ -10,11 +10,13 @@ graph TB
     User["👤 ユーザー"]
     Agent["🤖 AIエージェント / MCPクライアント"]
     Server["🚀 SqlSchemaBridgeMCPサーバー"]
+    Database[("💾 実際のデータベース<br/>(SQL Server, MySQL, PostgreSQL, SQLite)")]
     CSVFiles["📄 CSVファイル<br/>(tables.csv, columns.csv, relations.csv)"]
 
     subgraph "利用可能なMCPツール"
         QueryTools["🔍 スキーマクエリ"]
         EditTools["✏️ スキーマ編集"]
+        ConnectionTools["🔗 データベース接続"]
     end
 
     %% メインフロー
@@ -22,14 +24,19 @@ graph TB
     Agent <-->|"MCPプロトコル"| Server
     Server --> QueryTools
     Server --> EditTools
+    Server --> ConnectionTools
     QueryTools <-->|"読み込み"| CSVFiles
     EditTools <-->|"書き込み"| CSVFiles
+    ConnectionTools <-->|"スキーマ自動取得"| Database
+    ConnectionTools -->|"CSVファイル生成"| CSVFiles
     Agent -->|"スキーマに基づいてSQL生成"| User
 ```
 
 `SqlSchemaBridgeMCP`は、自然言語とSQLの間のギャップを埋めるために設計されたModel-Context-Protocol (MCP) サーバーです。AIエージェントにデータベーススキーマに関する必要なメタデータ(テーブル定義、列の詳細、リレーションシップなど)を提供し、エージェントがユーザーの質問に基づいてSQLクエリを正確に構築できるようにします。
 
-このサーバーは、ローカルのCSVファイルからデータベーススキーマ情報を読み込むため、ユーザーは特定のデータベース環境のメタデータを簡単に管理および更新できます。
+このサーバーは2つの方法でスキーマ情報を管理できます：
+- **手動管理：** ローカルのCSVファイルからデータベーススキーマ情報を読み込み
+- **自動インポート：** 実際のデータベース（SQL Server、MySQL、PostgreSQL、SQLite）に直接接続してスキーマを自動取得
 
 ## 動作の仕組み
 
@@ -58,6 +65,7 @@ sequenceDiagram
 ## 特徴
 
 -   **自然言語からSQLへ：** AIエージェントが自然言語の質問を正確なSQLクエリに翻訳するのを助けます。
+-   **データベース直接接続：** SQL Server、MySQL、PostgreSQL、SQLiteから直接スキーマ情報を自動取得できます。
 -   **ローカルでのメタデータ管理：** データベーススキーマ情報は、ローカルマシンに保存された簡単なCSVファイルを通じて管理されます。
 -   **プロファイルサポート：** プロファイルを使用して、異なるデータベーススキーマ定義を簡単に切り替えることができます。これは、複数のプロジェクトや環境(開発、テスト、本番など)を管理するのに理想的です。
 
@@ -264,9 +272,62 @@ dotnet publish -c Release -r osx-x64 --self-contained true
 
 出力は`bin/Release/net8.0/<RID>/publish/`ディレクトリに配置されます。
 
+## データベース接続・スキーマ自動インポート
+
+### 対応データベース
+
+このサーバーは以下のデータベースからの直接スキーマインポートに対応しています：
+
+- **Microsoft SQL Server** - Windows認証またはSQL Server認証
+- **MySQL** - バージョン5.7以降
+- **PostgreSQL** - バージョン10以降  
+- **SQLite** - ローカルファイルベースのデータベース
+
+### 接続文字列の例
+
+#### SQL Server
+```
+Server=localhost;Database=MyDatabase;Integrated Security=true;
+Server=localhost;Database=MyDatabase;User Id=myuser;Password=mypass;
+```
+
+#### MySQL
+```
+Server=localhost;Database=test;Uid=root;Pwd=password;Port=3306;
+```
+
+#### PostgreSQL
+```
+Host=localhost;Database=mydb;Username=postgres;Password=mypass;Port=5432;
+```
+
+#### SQLite
+```
+Data Source=C:\path\to\database.db;
+```
+
+### 使用方法
+
+データベースから直接スキーマをインポートするには、以下のツールを使用します：
+
+```
+# データベースへの接続をテスト
+TestDatabaseConnection(
+    databaseType: "SqlServer",
+    connectionString: "Server=localhost;Database=MyDB;Integrated Security=true;"
+)
+
+# スキーマをインポートして新しいプロファイルを作成・切り替え
+ImportAndSwitchToProfile(
+    databaseType: "SqlServer", 
+    connectionString: "Server=localhost;Database=MyDB;Integrated Security=true;",
+    profileName: "MyProject"
+)
+```
+
 ## 利用可能なツール
 
-サーバーは、AIエージェント向けの包括的な13のツールセットを公開しており、スキーマクエリ、スキーマ編集、プロファイル管理、プロファイル検証の4つの主要なカテゴリに分かれています。
+サーバーは、AIエージェント向けの包括的なツールセットを公開しており、スキーマクエリ、スキーマ編集、プロファイル管理、プロファイル検証、データベース接続の5つの主要なカテゴリに分かれています。
 
 ### スキーマクエリツール
 
@@ -413,3 +474,37 @@ sql_schema_manage_schema(operation="delete", elementType="relation", tablePhysic
 -   **説明**: 利用可能なすべてのプロファイルを検証します。
 -   **引数**: なし。
 -   **戻り値**: 全プロファイルの検証サマリーを含むJSONオブジェクト。
+
+### データベース接続ツール
+
+これらのツールにより、実際のデータベースに直接接続してスキーマ情報を自動取得できます。
+
+#### `TestDatabaseConnection`
+-   **説明**: 指定されたデータベースへの接続をテストします。
+-   **引数**:
+    -   `databaseType: str`: データベースタイプ（SqlServer、MySQL、PostgreSQL、SQLite）
+    -   `connectionString: str`: データベースへの接続文字列
+-   **戻り値**: 接続テストの結果を含むJSONオブジェクト。
+
+#### `ImportDatabaseSchema`  
+-   **説明**: データベースからスキーマ情報を取得して指定されたプロファイルに保存します。
+-   **引数**:
+    -   `databaseType: str`: データベースタイプ（SqlServer、MySQL、PostgreSQL、SQLite）
+    -   `connectionString: str`: データベースへの接続文字列
+    -   `profileName: str`: 保存先のプロファイル名
+    -   `connectionName: str` (任意): 接続の参照名
+-   **戻り値**: インポート結果とスキーマ統計を含むJSONオブジェクト。
+
+#### `ImportAndSwitchToProfile`
+-   **説明**: データベースからスキーマをインポートし、同時に新しいプロファイルに切り替えます。
+-   **引数**:
+    -   `databaseType: str`: データベースタイプ（SqlServer、MySQL、PostgreSQL、SQLite）
+    -   `connectionString: str`: データベースへの接続文字列  
+    -   `profileName: str`: 作成・切り替え先のプロファイル名
+    -   `connectionName: str` (任意): 接続の参照名
+-   **戻り値**: インポート結果と現在のプロファイル情報を含むJSONオブジェクト。
+
+#### `GetSupportedDatabaseTypes`
+-   **説明**: サポートされているデータベースタイプの一覧を取得します。
+-   **引数**: なし。
+-   **戻り値**: サポート対応データベースの一覧と表示名を含むJSONオブジェクト。

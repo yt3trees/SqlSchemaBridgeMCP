@@ -1,4 +1,7 @@
+using System.Globalization;
 using System.Text;
+using CsvHelper;
+using Microsoft.Extensions.Logging;
 using SqlSchemaBridgeMCP.Models;
 
 namespace SqlSchemaBridgeMCP.Services;
@@ -8,6 +11,12 @@ namespace SqlSchemaBridgeMCP.Services;
 /// </summary>
 public class CsvConverterService
 {
+    private readonly ILogger<CsvConverterService> _logger;
+
+    public CsvConverterService(ILogger<CsvConverterService> logger)
+    {
+        _logger = logger;
+    }
     public string ConvertTablesToCsv(IEnumerable<Table> tables)
     {
         var csv = new StringBuilder();
@@ -45,6 +54,25 @@ public class CsvConverterService
         }
 
         return csv.ToString();
+    }
+
+    public async Task WriteCsvAsync<T>(IEnumerable<T> records, string filePath)
+    {
+        try
+        {
+            _logger.LogDebug("Writing CSV file to: {FilePath}", filePath);
+
+            using var writer = new StreamWriter(filePath);
+            using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
+
+            await csv.WriteRecordsAsync(records);
+            _logger.LogInformation("Successfully wrote {Count} records to {FilePath}", records.Count(), filePath);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to write CSV file: {FilePath}", filePath);
+            throw;
+        }
     }
 
     private static string EscapeCsvField(string? field)

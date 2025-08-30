@@ -10,11 +10,13 @@ graph TB
     User["👤 User"]
     Agent["🤖 AI Agent / MCP Client"]
     Server["🚀 SqlSchemaBridgeMCP Server"]
+    Database[("💾 Live Database<br/>(SQL Server, MySQL, PostgreSQL, SQLite)")]
     CSVFiles["📄 CSV Files<br/>(tables.csv, columns.csv, relations.csv)"]
 
     subgraph "Available MCP Tools"
         QueryTools["🔍 Schema Querying"]
         EditTools["✏️ Schema Editing"]
+        ConnectionTools["🔗 Database Connection"]
     end
 
     %% Main Flow
@@ -22,14 +24,19 @@ graph TB
     Agent <-->|"MCP Protocol"| Server
     Server --> QueryTools
     Server --> EditTools
+    Server --> ConnectionTools
     QueryTools <-->|"Read"| CSVFiles
     EditTools <-->|"Write"| CSVFiles
+    ConnectionTools <-->|"Auto-import schema"| Database
+    ConnectionTools -->|"Generate CSV files"| CSVFiles
     Agent -->|"Generate SQL based on schema"| User
 ```
 
 `SqlSchemaBridgeMCP` is a Model-Context-Protocol (MCP) server designed to bridge the gap between natural language and SQL. It provides an AI agent with the necessary metadata about a database schema—such as table definitions, column details, and relationships—enabling the agent to accurately construct SQL queries based on user questions.
 
-This server reads database schema information from local CSV files, making it easy for users to manage and update the metadata for their specific database environments.
+This server supports two approaches for managing schema information:
+- **Manual Management:** Read database schema information from local CSV files
+- **Auto-Import:** Connect directly to live databases (SQL Server, MySQL, PostgreSQL, SQLite) to automatically extract schema information
 
 ## How It Works
 
