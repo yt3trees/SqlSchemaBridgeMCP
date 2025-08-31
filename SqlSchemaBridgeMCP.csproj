@@ -14,7 +14,7 @@
     <!-- Set recommended package metadata -->
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageId>SqlSchemaBridgeMCP</PackageId>
-    <PackageVersion>0.1.5</PackageVersion>
+    <PackageVersion>0.1.6</PackageVersion>
     <PackageTags>AI; MCP; server; stdio</PackageTags>
     <Description>An MCP server using the MCP C# SDK.</Description>
     <RepositoryUrl>https://github.com/yt3trees/SqlSchemaBridgeMCP</RepositoryUrl>
