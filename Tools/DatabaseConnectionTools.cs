@@ -29,7 +29,7 @@ public class DatabaseConnectionTools
 
     [McpServerTool]
     [Description("Test connection to a database")]
-    public async Task<string> TestDatabaseConnection(
+    public async Task<string> SqlSchemaTestDatabaseConnection(
         [Description("Database type (SqlServer, MySQL, PostgreSQL, SQLite)")] string databaseType,
         [Description("Connection string for the database")] string connectionString)
     {
@@ -72,7 +72,7 @@ public class DatabaseConnectionTools
 
     [McpServerTool]
     [Description("Import database schema from a live database and save to a profile")]
-    public async Task<string> ImportDatabaseSchema(
+    public async Task<string> SqlSchemaImportDatabaseSchema(
         [Description("Database type (SqlServer, MySQL, PostgreSQL, SQLite)")] string databaseType,
         [Description("Connection string for the database")] string connectionString,
         [Description("Profile name to save the imported schema to")] string profileName,
@@ -135,7 +135,7 @@ public class DatabaseConnectionTools
 
     [McpServerTool]
     [Description("Import database schema and switch to the new profile immediately")]
-    public async Task<string> ImportAndSwitchToProfile(
+    public async Task<string> SqlSchemaImportAndSwitchToProfile(
         [Description("Database type (SqlServer, MySQL, PostgreSQL, SQLite)")] string databaseType,
         [Description("Connection string for the database")] string connectionString,
         [Description("Profile name to create and switch to")] string profileName,
@@ -144,7 +144,7 @@ public class DatabaseConnectionTools
         try
         {
             // First import the schema
-            var importResultJson = await ImportDatabaseSchema(databaseType, connectionString, profileName, connectionName);
+            var importResultJson = await SqlSchemaImportDatabaseSchema(databaseType, connectionString, profileName, connectionName);
             var importResult = JsonSerializer.Deserialize<JsonElement>(importResultJson);
 
             if (importResult.GetProperty("success").GetBoolean())
@@ -185,7 +185,7 @@ public class DatabaseConnectionTools
 
     [McpServerTool]
     [Description("Get information about supported database types")]
-    public string GetSupportedDatabaseTypes()
+    public string SqlSchemaGetSupportedDatabaseTypes()
     {
         try
         {
