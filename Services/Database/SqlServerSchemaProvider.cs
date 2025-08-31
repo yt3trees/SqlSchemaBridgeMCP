@@ -24,9 +24,15 @@ public class SqlServerSchemaProvider : IDatabaseSchemaProvider
             await connection.OpenAsync();
             return connection.State == ConnectionState.Open;
         }
+        catch (SqlException ex)
+        {
+            _logger.LogError(ex, "SQL Server connection failed. Error Number: {ErrorNumber}, Severity: {Class}, State: {State}, Server: {Server}, Procedure: {Procedure}, Line: {LineNumber}, Message: {Message}",
+                ex.Number, ex.Class, ex.State, ex.Server ?? "Unknown", ex.Procedure ?? "N/A", ex.LineNumber, ex.Message);
+            return false;
+        }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to connect to SQL Server database");
+            _logger.LogError(ex, "Failed to connect to SQL Server database. Connection string format or other error: {Message}", ex.Message);
             return false;
         }
     }
