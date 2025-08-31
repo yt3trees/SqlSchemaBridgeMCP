@@ -40,21 +40,20 @@ public class SqlServerSchemaProvider : IDatabaseSchemaProvider
     public async Task<IReadOnlyList<Table>> GetTablesAsync(string connectionString)
     {
         const string query = @"
-            SELECT 
+            SELECT
                 DB_NAME() as database_name,
                 SCHEMA_NAME(t.schema_id) as schema_name,
                 t.name as physical_name,
                 t.name as logical_name,
                 COALESCE(
-                    (SELECT c.name
+                    (SELECT STRING_AGG(c.name, ', ') WITHIN GROUP (ORDER BY ic.index_column_id)
                      FROM sys.key_constraints kc
                      JOIN sys.index_columns ic ON kc.parent_object_id = ic.object_id
                                                 AND kc.unique_index_id = ic.index_id
                      JOIN sys.columns c ON ic.object_id = c.object_id
                                         AND ic.column_id = c.column_id
                      WHERE kc.parent_object_id = t.object_id
-                       AND kc.type = 'PK'
-                       AND ic.index_column_id = 1),
+                       AND kc.type = 'PK'),
                     '') as primary_key,
                 COALESCE(ep.value, '') as description
             FROM sys.tables t
@@ -155,7 +154,7 @@ public class SqlServerSchemaProvider : IDatabaseSchemaProvider
     public async Task<IReadOnlyList<Relation>> GetRelationsAsync(string connectionString)
     {
         const string query = @"
-            SELECT 
+            SELECT
                 pt.name as source_table,
                 pc.name as source_column,
                 rt.name as target_table,
