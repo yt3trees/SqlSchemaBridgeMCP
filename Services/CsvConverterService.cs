@@ -75,6 +75,45 @@ public class CsvConverterService
         }
     }
 
+    /// <summary>
+    /// Appends records to an existing CSV file. If the file doesn't exist, creates a new one with headers.
+    /// </summary>
+    public async Task AppendCsvAsync<T>(IEnumerable<T> records, string filePath)
+    {
+        try
+        {
+            var recordsList = records.ToList();
+            if (recordsList.Count == 0)
+            {
+                _logger.LogDebug("No records to append to {FilePath}", filePath);
+                return;
+            }
+
+            var fileExists = File.Exists(filePath);
+            _logger.LogDebug("Appending {Count} records to CSV file: {FilePath} (file exists: {FileExists})", 
+                recordsList.Count, filePath, fileExists);
+
+            using var stream = new FileStream(filePath, FileMode.Append, FileAccess.Write);
+            using var writer = new StreamWriter(stream);
+            using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
+
+            // If the file doesn't exist or is empty, write headers
+            if (!fileExists || new FileInfo(filePath).Length == 0)
+            {
+                csv.WriteHeader<T>();
+                await csv.NextRecordAsync();
+            }
+
+            await csv.WriteRecordsAsync(recordsList);
+            _logger.LogInformation("Successfully appended {Count} records to {FilePath}", recordsList.Count, filePath);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to append to CSV file: {FilePath}", filePath);
+            throw;
+        }
+    }
+
     private static string EscapeCsvField(string? field)
     {
         if (string.IsNullOrEmpty(field))

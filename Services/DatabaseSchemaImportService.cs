@@ -60,12 +60,13 @@ public class DatabaseSchemaImportService
                 var profilePath = GetProfilePath(profileName);
                 Directory.CreateDirectory(profilePath);
 
-                await _csvConverter.WriteCsvAsync(tables, Path.Combine(profilePath, "tables.csv"));
-                await _csvConverter.WriteCsvAsync(columns, Path.Combine(profilePath, "columns.csv"));
-                await _csvConverter.WriteCsvAsync(relations, Path.Combine(profilePath, "relations.csv"));
+                // Use AppendCsvAsync to add data to existing profile instead of overwriting
+                await _csvConverter.AppendCsvAsync(tables, Path.Combine(profilePath, "tables.csv"));
+                await _csvConverter.AppendCsvAsync(columns, Path.Combine(profilePath, "columns.csv"));
+                await _csvConverter.AppendCsvAsync(relations, Path.Combine(profilePath, "relations.csv"));
 
                 result.ProfilePath = profilePath;
-                _logger.LogInformation("Schema data saved to profile: {ProfileName}", profileName);
+                _logger.LogInformation("Schema data appended to profile: {ProfileName}", profileName);
             }
 
             result.Success = true;
