@@ -71,8 +71,8 @@ public class DatabaseConnectionTools
     }
 
     [McpServerTool]
-    [Description("Import database schema from a live database and save to a profile")]
-    public async Task<string> SqlSchemaImportDatabaseSchema(
+    [Description("[Initial Setup Only] Import database schema from a live database for the first time setup. Use this tool only during initial project configuration.")]
+    public async Task<string> SqlSchemaInitialSetupImportDatabase(
         [Description("Database type (SqlServer, MySQL, PostgreSQL, SQLite)")] string databaseType,
         [Description("Connection string for the database")] string connectionString,
         [Description("Profile name to save the imported schema to")] string profileName,
@@ -134,8 +134,8 @@ public class DatabaseConnectionTools
     }
 
     [McpServerTool]
-    [Description("Import database schema and switch to the new profile immediately")]
-    public async Task<string> SqlSchemaImportAndSwitchToProfile(
+    [Description("[Initial Setup Only] Import database schema and switch to new profile immediately. This is for initial project setup only - do not use for regular operations.")]
+    public async Task<string> SqlSchemaInitialSetupImportAndSwitch(
         [Description("Database type (SqlServer, MySQL, PostgreSQL, SQLite)")] string databaseType,
         [Description("Connection string for the database")] string connectionString,
         [Description("Profile name to create and switch to")] string profileName,
@@ -144,7 +144,7 @@ public class DatabaseConnectionTools
         try
         {
             // First import the schema
-            var importResultJson = await SqlSchemaImportDatabaseSchema(databaseType, connectionString, profileName, connectionName);
+            var importResultJson = await SqlSchemaInitialSetupImportDatabase(databaseType, connectionString, profileName, connectionName);
             var importResult = JsonSerializer.Deserialize<JsonElement>(importResultJson);
 
             if (importResult.GetProperty("success").GetBoolean())
