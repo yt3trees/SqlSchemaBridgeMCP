@@ -331,25 +331,6 @@ public class WebDebugService
                 await context.Response.WriteAsync($"Error: {ex.Message}");
             }
         });
-
-
-
-        _app.MapGet("/api/schema/instructions", async context =>
-        {
-            try
-            {
-                var result = _schemaTools.SqlSchemaGetProfileInstructions();
-
-                context.Response.ContentType = "text/plain; charset=utf-8";
-                await context.Response.WriteAsync(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in schema get instructions test");
-                context.Response.StatusCode = 500;
-                await context.Response.WriteAsync($"Error: {ex.Message}");
-            }
-        });
     }
 
     private string GenerateIndexHtml()
