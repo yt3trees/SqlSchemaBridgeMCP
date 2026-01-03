@@ -27,20 +27,6 @@ public class SqlSchemaBridgeTools
     }
 
     [McpServerTool]
-    [Description("Gets the instructions for the AI, if a README.md file is present in the current profile's directory. This tool must be executed first when using this MCP server.")]
-    public string SqlSchemaGetProfileInstructions()
-    {
-        if (!string.IsNullOrWhiteSpace(_profileManager.CurrentProfileReadme))
-        {
-            _logger.LogInformation("Returning profile instructions from README.md.");
-            return _profileManager.CurrentProfileReadme;
-        }
-
-        _logger.LogInformation("No profile instructions (README.md) found for the current profile.");
-        return "No specific instructions were provided for this profile.";
-    }
-
-    [McpServerTool]
     [Description("Searches for tables by logical or physical name and returns all matches in CSV format.")]
     public string SqlSchemaFindTable(
         [Description("The logical name of the table (e.g., 'Customers')")] string? logicalName = null,
